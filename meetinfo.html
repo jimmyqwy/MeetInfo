@@ -1,0 +1,130 @@
+<head>
+    <title>Meeting Information</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/svg.css" rel="stylesheet">
+    <link href="css/my.css" rel="stylesheet">
+    <!--<script src="js/jquery-1.11.2.min.js"></script>-->
+    <!--<script src="js/bootstrap.min.js"></script>-->
+    <script type="text/javascript" src="js/angular.min.js"></script>
+    <script type="text/javascript" src="js/angular-ui-router.min.js"></script>
+    <script type="text/javascript" src="js/d3.min.js"></script>
+    <!--<script type="text/javascript" src="js/ui-bootstrap-tpls-0.12.0.js"></script>-->
+
+    <link href="lib/datepicker/jquery.datepick.css" rel="stylesheet">
+    <script src="lib/datepicker/jquery.plugin.js"></script>
+    <script src="lib/datepicker/jquery.datepick.js"></script>
+
+    <!-- <script type="text/javascript" src="/javascripts/angularApp.js"></script> -->
+    <!-- <script type="text/javascript" src="/javascripts/lifedirectives.js"></script> -->
+
+    <style type="text/css">
+        .embed + img { position: relative; left: 0px; top: 0px; }
+        img.trigger {
+            margin: 0.25em;  vertical-align: top;
+        }
+        .glyphicon-thumbs-up { cursor:pointer }
+
+        .vcenter {
+          display: inline-block;
+          vertical-align: middle;
+          float: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="row">
+        <div class="col-xs-8  col-xs-offset-2 col-md-8 col-md-offset-2">
+        <!--<div class="col-md-5">-->
+        <!--<ui-view></ui-view>-->
+            <!--Whenever ui-router detects a route change, it will place the new state's template inside the tag and initialize the controller we specified in our state configuration. -->
+            {{> meetinfo}}
+            {{> meetingUpdate}}
+        </div>
+    </div>
+</body>
+
+
+<template name="meetinfo">
+  <div class="page-header">
+    <div class="row">
+    <!--<div class="col-xs-10  col-xs-offset-1 col-md-10 col-md-offset-1">-->
+      <div class="col-xs-5 col-md-5 col-lg-5 vcenter">
+        <h2> ~ Meeting Info ~ </h2>
+      </div>
+      <div class="col-xs-6 col-md-6 text-right vcenter">
+        <form class="form-search">
+          <input type="text" class="input-medium search-query">
+          <button type="submit" class="btn btn-primary btn-outline"> Search </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <table id="meetingTable" class="table table-bordred table-striped">
+      <tr>
+          <th> 项目编号 </th>
+          <th> Type </th>
+          <th> Group </th>
+          <th> System </th>
+          <th> Orgnizer </th>
+          <th> Title </th>
+          <th> Date </th>
+          <th> Pass? </th>
+          <th> Detail </th>
+      </tr>
+      {{#each meetings}}
+        <tr>
+            <td> {{meet_project_ID}} </td>
+            <td> {{meet_type}} </td>
+            <td> {{meet_group}} </td>
+            <td> {{meet_system}} </td>
+            <td> {{meet_orgnizer}} </td>
+            <td> {{meet_title}} </td>
+            <td> {{meet_date}} </td>
+            <td> {{meet_pass}} </td>
+            <td>
+              <button type="submit" class="btn btn-primary btn-outline">
+                Select
+              </button>
+            </td>
+        </tr>
+      {{/each}}
+  </table>
+  <form>
+    <button type="submit" class="btn btn-primary btn-outline">
+      <span class="glyphicon glyphicon-thumbs-up"></span>
+          Upload Outlook Schedule (.csv)
+    </button>
+  </form>
+</template>
+
+<template name="meetingUpdate">
+  <div class="page-header">
+    <div class="row">
+    <!--<div class="col-xs-10  col-xs-offset-1 col-md-10 col-md-offset-1">-->
+      <div class="col-xs-5 col-md-5 col-lg-5">
+        <h2> ~ Details ~ </h2>
+      </div>
+    </div>
+  </div>
+
+  {{#autoForm id="meetingInfo"
+              type=formType
+              collection=Collections.Meetings
+              doc=selectedMeetingDoc }}
+    {{#each afFieldNames}}
+      {{> afQuickField
+          name=this.name
+          options=afOptionsFromSchema
+          template="bootstrap3-horizontal"
+          label-class="col-sm-2 col-md-2"
+          input-col-class="col-sm-10 col-md-10"}}
+    {{/each}}
+    <div class="form-group">
+      <button type="submit" class="btn btn-primary">
+          <span class="glyphicon glyphicon-thumbs-up"></span>
+          Save changes
+      </button>
+      <button class="btn btn-default">Reset</button>
+    </div>
+  {{/autoForm}}
+</template>

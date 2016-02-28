@@ -1,0 +1,73 @@
+<div class="row">
+    <!--<div class="col-xs-10  col-xs-offset-1 col-md-10 col-md-offset-1">-->
+    <div class="col-xs-12 col-md-6">
+      <div class="title">
+        <h4>
+            <svg width='10' height='10'>
+                <circle cx='5' cy='4' r='3' class='bluedot'/>
+            </svg>
+            Project Info
+        </h4>
+      </div>
+        <div class="form-group">
+            <div class="controls">
+                <input class="form-control" type="text"
+                    name="membername"
+                    placeholder="Name"
+                    ng-model="memberName"
+                    unique-username="" required />
+                <div class="error-container" ng-show="selectForm.membername.$dirty && selectForm.membername.$invalid">
+                    <small class="error" ng-show="selectForm.membername.$error.required">Please input the meeting brief info. </small>
+                    <small class="error" ng-show="selectForm.membername.$error.unique">Same title or ID is used. </small>
+                </div>
+            </div>
+        </div>
+        <h4>
+            <svg width='10' height='10'>
+                <circle cx='5' cy='4' r='3' class='bluedot'/>
+            </svg>
+            Pass Or Not
+        </h4>
+        <ul name="list_candDate"  style="list-style-type:none; padding-left:0">
+            <li ng-repeat="select in selections track by $index">
+                <div class="row">
+                  <button type="button" class="btn btn-primary btn-sucess">
+                  <span class="glyphicon glyphicon-ok-sign"></span>
+                  </button>
+                  <!--
+                    <div class="col-xs-4 col-md-4 Center-Container"  style="height:34px">
+                            <div class="Absolute-Center">
+                            {{getFullDate(candidateDates[$index])}}
+                            </div>
+                    </div>
+                    <div class="btn-group col-xs-8  text-left col-md-8 text-left">
+                        <label class="btn btn-primary btn-outline" ng-model="select.willing" btn-radio="'OK'">OK!</label>
+                        <label class="btn btn-warning btn-outline" ng-model="select.willing" btn-radio="'MIDDLE'">Maybe?</label>
+                        <label class="btn btn-danger btn-outline" ng-model="select.willing" btn-radio="'NG'">NG..</label>
+                    </div>
+                  -->
+               </div>
+            </li>
+        </ul>
+
+        <h4>
+            <svg width='10' height='10'>
+                <circle cx='5' cy='4' r='3' class='bluedot'/>
+            </svg>
+            Comments
+        </h4>
+        <div class="form-group">
+            <input class="form-control" type="text"
+            placeholder="Say something"
+            ng-model="memberComment"/>
+        </div>
+    </div>
+  </div>
+
+  <form>
+      <!--<button class="btn btn-primary" ng-click="ok()"><span class="glyphicon glyphicon-ok-sign"></span>Confirm</button>-->
+      <button type="submit" class="btn btn-primary">
+          <span class="glyphicon glyphicon-thumbs-up"></span>
+          Confirm
+      </button>
+  </form>
