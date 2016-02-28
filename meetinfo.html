@@ -52,10 +52,11 @@
         <h2> ~ Meeting Info ~ </h2>
       </div>
       <div class="col-xs-6 col-md-6 text-right vcenter">
-        <form class="form-search">
-          <input type="text" class="input-medium search-query">
-          <button type="submit" class="btn btn-primary btn-outline"> Search </button>
-        </form>
+        <input type="text" value={{searchKeyWord}}
+               class="js-search-text input-medium search-query">
+        <button class="js-search btn btn-primary btn-outline">
+          Search
+        </button>
       </div>
     </div>
   </div>
@@ -65,7 +66,7 @@
           <th> Type </th>
           <th> Group </th>
           <th> System </th>
-          <th> Orgnizer </th>
+          <th> Organizer </th>
           <th> Title </th>
           <th> Date </th>
           <th> Pass? </th>
@@ -73,16 +74,16 @@
       </tr>
       {{#each meetings}}
         <tr>
-            <td> {{meet_project_ID}} </td>
-            <td> {{meet_type}} </td>
-            <td> {{meet_group}} </td>
-            <td> {{meet_system}} </td>
-            <td> {{meet_orgnizer}} </td>
-            <td> {{meet_title}} </td>
-            <td> {{meet_date}} </td>
-            <td> {{meet_pass}} </td>
+            <td> {{projectID}} </td>
+            <td> {{type}} </td>
+            <td> {{group}} </td>
+            <td> {{system}} </td>
+            <td> {{organizer}} </td>
+            <td> {{title}} </td>
+            <td> {{date}} </td>
+            <td> {{pass}} </td>
             <td>
-              <button type="submit" class="btn btn-primary btn-outline">
+              <button class="js-select-meeting btn btn-primary btn-outline">
                 Select
               </button>
             </td>
@@ -90,10 +91,16 @@
       {{/each}}
   </table>
   <form>
-    <button type="submit" class="btn btn-primary btn-outline">
-      <span class="glyphicon glyphicon-thumbs-up"></span>
-          Upload Outlook Schedule (.csv)
-    </button>
+    <div class="row">
+      <button type="submit" class="btn btn-primary btn-outline">
+        <span class="glyphicon glyphicon-thumbs-up"></span>
+            Upload Outlook Schedule (.csv)
+      </button>
+      <button type="submit" class="btn btn-primary btn-outline">
+        <span class="glyphicon glyphicon-thumbs-up"></span>
+            Save all
+      </button>
+    </div>
   </form>
 </template>
 
@@ -120,11 +127,13 @@
           input-col-class="col-sm-10 col-md-10"}}
     {{/each}}
     <div class="form-group">
-      <button type="submit" class="btn btn-primary">
+      <button type="submit" class="btn btn-primary" disabled="{{disableButtons}}">
           <span class="glyphicon glyphicon-thumbs-up"></span>
           Save changes
       </button>
-      <button class="btn btn-default">Reset</button>
+      <button class="btn btn-default .js-update-reset" disabled="{{disableButtons}}">
+        Reset
+      </button>
     </div>
   {{/autoForm}}
 </template>
