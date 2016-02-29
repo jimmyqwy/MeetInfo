@@ -66,6 +66,15 @@ var local_meeting_data = [
   }
 ];
 
+
+// TODO: move to /client/init.js
+if (Meteor.isClient) {
+  Uploader.localisation = {
+    browse: "Upload Outlook Schedule"
+  }
+}
+
+// TODO: move to /server/init.js
 if (Meteor.isServer) {
   Meteor.startup(function () {
 
@@ -77,5 +86,33 @@ if (Meteor.isServer) {
       }
     }  // end of if have no meetings
     console.log("Startup :" + Meetings.find().count());
+
+
+    // Initialize uploader
+    UploadServer.init({
+      tmpDir: process.env.PWD + "/uploads/tmp",
+      uploadDir: process.env.PWD + "/uploads/",
+      checkCreateDirectories: true,  // create the directories for you
+      finished: function(fileInfo, formFields) {
+        console.log(fileInfo);
+        var fs = Npm.require('fs');
+        var path = Npm.require('path');
+        var basepath = path.resolve('.').split('.meteor')[0];
+        //console.log(basepath);
+
+        var excel = new Excel('xlsx');
+        var workbook = excel.readFile(basepath + "uploads/" + fileInfo.name);
+        var sheetName = workbook.SheetNames;
+
+        //console.log("!!" + workbook.SheetNames[0]);
+        var sheet = workbook.Sheets[workbook.SheetNames[0]];
+        var options = { header : 1 }
+        // Generate the JSON
+        var workbookJson = excel.utils.sheet_to_json( sheet, options );
+        console.log(workbookJson);
+      }
+    });
+
   }); // startup server function
+
 }

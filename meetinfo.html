@@ -90,18 +90,16 @@
         </tr>
       {{/each}}
   </table>
-  <form>
-    <div class="row">
-      <button type="submit" class="btn btn-primary btn-outline">
-        <span class="glyphicon glyphicon-thumbs-up"></span>
-            Upload Outlook Schedule (.csv)
-      </button>
-      <button type="submit" class="btn btn-primary btn-outline">
-        <span class="glyphicon glyphicon-thumbs-up"></span>
-            Save all
-      </button>
-    </div>
-  </form>
+
+  <div class="row">
+    {{> upload_bootstrap fileTypes=".xlsx" multiple=false overwrite=true}}
+    <!--
+    <button type="submit" class="btn btn-primary btn-outline">
+      <span class="glyphicon glyphicon-thumbs-up"></span>
+          Upload Outlook Schedule (.csv)
+    </button>
+    -->
+  </div>
 </template>
 
 <template name="meetingUpdate">
