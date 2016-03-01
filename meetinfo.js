@@ -1,12 +1,12 @@
 Schemas = {};
 
 Schemas.Meeting = new SimpleSchema({
-  ID: {
+  /*ID: {
     type: String,
     autoform: {
       omit: true
     }
-  },
+  },*/
   projectID: {
     type: String,
     optional: true
@@ -29,6 +29,7 @@ Schemas.Meeting = new SimpleSchema({
   },
   title: {
     type: String,
+    optional: true
   },
   date : {
     type: String,
@@ -47,8 +48,13 @@ Schemas.Meeting = new SimpleSchema({
     type: String,
     optional: true,
     autoform: {
-      afFieldInput: {
-        type: "boolean-checkbox"
+      type: "select",
+      options: function() {
+        return [
+          {label: "是", value: "pass"},
+          {label: "跟进", value: "progress"},
+          {label: "否", value: "fail"}
+        ]
       }
     }
   },
@@ -104,6 +110,26 @@ if (Meteor.isClient) {
         return Meetings.find({"_id" : {"$in" : ids}});
       } else {
         return [];
+      }
+    },
+
+    passColor: function(passStatus) {
+      if (passStatus == "pass" ) {
+        return "green";
+      } else if ( passStatus == "progress" ) {
+        return "yellow";
+      } else {
+        return "red";
+      }
+    },
+
+    passLabel: function(passStatus) {
+      if (passStatus == "pass" ) {
+        return "是";
+      } else if ( passStatus == "progress" ) {
+        return "跟进";
+      } else {
+        return "否";
       }
     }
   });
@@ -183,5 +209,5 @@ if (Meteor.isServer) {
     // code to run on server at startup
   });
   */
-  
+
 }

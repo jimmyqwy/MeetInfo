@@ -1,4 +1,4 @@
-var local_meeting_data = [
+/*var local_meeting_data = [
   {
     ID: "1",
     projectID: "JTDK011300013",
@@ -65,6 +65,49 @@ var local_meeting_data = [
     comment: "comments"
   }
 ];
+*/
+
+var json_to_meetObj = function (jsonObj) {
+  if (jsonObj) {
+    var meet_title = jsonObj[0];//jsonObj["主题"];
+    var separateLeftBrace = meet_title.indexOf("【");
+    var separateRightBrace = meet_title.indexOf("】");
+    if (separateLeftBrace != -1 && separateRightBrace != -1) {
+      var meet_key_info = meet_title.substring(separateLeftBrace + 1, separateRightBrace);
+      var splits = meet_key_info.split("-");
+      var meet_type = splits[0];
+      var meet_system = "";
+      if (splits.length > 1) {
+        meet_system = splits[1];
+      }
+
+      var separateSpace = meet_title.indexOf(" ");
+      var meet_group = "";
+      var title_body = "";
+      if (separateSpace != -1) {
+        meet_group = meet_title.substring(separateRightBrace + 1, separateSpace);
+        title_body = meet_title.substring(separateSpace + 1, meet_title.length);
+      } else {
+        // no space
+        if (separateRightBrace < meet_title.length - 1 ) {
+          title_body = meet_title.substring(separateRightBrace + 1, meet_title.length);
+        }
+      }
+      return {
+        projectID: "",
+        type: meet_type,
+        group: meet_group,
+        system: meet_system,
+        organizer: jsonObj[9], //jsonObj["会议组织者"],
+        title: title_body,
+        date: jsonObj[1], //jsonObj["开始日期"],
+        result: "",
+        pass: "progress",
+        comment: ""
+      }
+    }
+  }
+};
 
 
 // TODO: move to /client/init.js
@@ -80,36 +123,53 @@ if (Meteor.isServer) {
 
     //EntireData.remove({});
     Meetings.remove({}); // targets (for editing based on searched results)
-    if (Meetings.find().count() == 0) {
+    /*if (Meetings.find().count() == 0) {
       for ( var i = 0 ; i < local_meeting_data.length; i++ ) {
         Meetings.insert(local_meeting_data[i]);
       }
     }  // end of if have no meetings
     console.log("Startup :" + Meetings.find().count());
-
+    */
 
     // Initialize uploader
     UploadServer.init({
       tmpDir: process.env.PWD + "/uploads/tmp",
       uploadDir: process.env.PWD + "/uploads/",
       checkCreateDirectories: true,  // create the directories for you
+      overwrite: true,
       finished: function(fileInfo, formFields) {
-        console.log(fileInfo);
+        //console.log(fileInfo);
         var fs = Npm.require('fs');
         var path = Npm.require('path');
         var basepath = path.resolve('.').split('.meteor')[0];
-        //console.log(basepath);
 
+        // Get excel
         var excel = new Excel('xlsx');
         var workbook = excel.readFile(basepath + "uploads/" + fileInfo.name);
         var sheetName = workbook.SheetNames;
-
-        //console.log("!!" + workbook.SheetNames[0]);
         var sheet = workbook.Sheets[workbook.SheetNames[0]];
         var options = { header : 1 }
         // Generate the JSON
         var workbookJson = excel.utils.sheet_to_json( sheet, options );
-        console.log(workbookJson);
+
+        console.log("OutlookRecords: " + workbookJson.length);
+        // insert json into Meetings Collection
+        for (var i = 0 ; i < workbookJson.length; i++ ) {
+          var meetInstance = json_to_meetObj(workbookJson[i]);
+          if (meetInstance) {
+            found = Meetings.find({"title": meetInstance["title"],
+                                   "date": meetInstance["date"] });
+            if (found.count() <= 0) {
+              Meetings.insert(meetInstance);
+            } else {
+              console.log(meetInstance["title"]);
+              console.log(meetInstance["date"]);
+            }
+          } else {
+            // console.log(workbookJson[i]);
+          }
+        }
+        console.log("Meetings: " + Meetings.find().count());
       }
     });
 

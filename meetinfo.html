@@ -62,29 +62,37 @@
   </div>
   <table id="meetingTable" class="table table-bordred table-striped">
       <tr>
-          <th> 项目编号 </th>
+          <!--<th> 项目编号 </th>-->
           <th> Type </th>
           <th> Group </th>
-          <th> System </th>
-          <th> Organizer </th>
+          <!--<th> System </th>-->
+          <!--<th> Organizer </th>-->
           <th> Title </th>
           <th> Date </th>
           <th> Pass? </th>
-          <th> Detail </th>
+          <th>   </th>
+          <th>  </th>
       </tr>
       {{#each meetings}}
         <tr>
-            <td> {{projectID}} </td>
-            <td> {{type}} </td>
-            <td> {{group}} </td>
-            <td> {{system}} </td>
-            <td> {{organizer}} </td>
-            <td> {{title}} </td>
-            <td> {{date}} </td>
-            <td> {{pass}} </td>
-            <td>
+            <!--<td> {{projectID}} </td>-->
+            <td width="15%"> {{type}} </td>
+            <td width="15%"> {{group}} </td>
+            <!--<td> {{system}} </td>-->
+            <!--<td> {{organizer}} </td>-->
+            <td width="45%"> {{title}} </td>
+            <td width="10%"> {{date}} </td>
+            <td width="5%">
+              <font color={{passColor pass}}>{{passLabel pass}}</font>
+            </td>
+            <td width="5%">
               <button class="js-select-meeting btn btn-primary btn-outline">
                 Select
+              </button>
+            </td>
+            <td width="5%">
+              <button class="js-delete-meeting btn btn-danger btn-outline">
+                Delete
               </button>
             </td>
         </tr>
