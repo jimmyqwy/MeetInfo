@@ -67,6 +67,11 @@
 ];
 */
 
+function pad(n){
+  return n < 10 ? '0' + n : n ;
+}
+
+// OUTLOOK file logic related.
 var json_to_meetObj = function (jsonObj) {
   if (jsonObj) {
     var meet_title = jsonObj[0];//jsonObj["主题"];
@@ -82,8 +87,11 @@ var json_to_meetObj = function (jsonObj) {
       }
 
       var separateSpace = meet_title.indexOf(" ");
-      var meet_group = "";
-      var title_body = "";
+      if (separateSpace <= separateLeftBrace ) {  // space should be higher than ]
+        separateSpace = meet_title.substring(separateRightBrace, meet_title.length).indexOf(" ");
+      }
+      var meet_group = " ";
+      var title_body = " ";
       if (separateSpace != -1) {
         meet_group = meet_title.substring(separateRightBrace + 1, separateSpace);
         title_body = meet_title.substring(separateSpace + 1, meet_title.length);
@@ -93,6 +101,7 @@ var json_to_meetObj = function (jsonObj) {
           title_body = meet_title.substring(separateRightBrace + 1, meet_title.length);
         }
       }
+      if (!title_body)  title_body = " ";
       return {
         projectID: "",
         type: meet_type,
@@ -100,7 +109,7 @@ var json_to_meetObj = function (jsonObj) {
         system: meet_system,
         organizer: jsonObj[9], //jsonObj["会议组织者"],
         title: title_body,
-        date: jsonObj[1], //jsonObj["开始日期"],
+        date: jsonObj[1].split('/').map(pad).join('-'), //jsonObj["开始日期"],
         result: "",
         pass: "progress",
         comment: ""
@@ -114,6 +123,16 @@ var json_to_meetObj = function (jsonObj) {
 if (Meteor.isClient) {
   Uploader.localisation = {
     browse: "Upload Outlook Schedule"
+  }
+
+  Uploader.finished = function(index, fileInfo, templateContext) {
+    // set session and rerender table 
+    docs = Meetings.find();
+    ids = [];
+    docs.forEach( function(element){
+      ids.push(element._id);
+    });
+    Session.set('MeetingTargetIDs', ids);
   }
 }
 
@@ -132,13 +151,48 @@ if (Meteor.isServer) {
     */
 
     // Initialize uploader
+    //var baseDir = process.env.PWD ? process.env.PWD + "/uploads" : "/uploads";
+    var baseDir = "";
+    if (process.env.PWD) {
+      baseDir = process.env.PWD + "/uploads";
+    } else {
+      var path = Npm.require('path');
+      var baseDir = path.resolve('.').split('.meteor')[0] + "uploads";
+    }
+
     UploadServer.init({
-      tmpDir: process.env.PWD + "/uploads/tmp",
-      uploadDir: process.env.PWD + "/uploads/",
+      tmpDir: baseDir + "\\tmp",
+      uploadDir: baseDir,
       checkCreateDirectories: true,  // create the directories for you
       overwrite: true,
+
+      /*
+      getDirectory: function (fileInfo, formData) {
+        console.log(formData);
+        if (formData && formData.directoryName != null) {
+            return formData.directoryName;
+        }
+        return "";
+      },
+      getFileName: function (fileInfo, formData) {
+        // to prevent unicode file name problem
+        var fileName = fileInfo.name;
+        var extensions = fileName.split('.');
+        var extension = extensions[extensions.length - 1];
+
+        // prevent duplicated file name
+        var stamp = new Date().valueOf();
+        fileName = stamp + "_" + Base64.encode(fileName) + '.' + extension; // Filename with extension
+
+        if (formData && formData.prefix != null) {
+            return formData.prefix + '_' + fileName;
+        }
+        return fileName;
+      },
+      */
+
       finished: function(fileInfo, formFields) {
-        //console.log(fileInfo);
+        //console.log(formFields);
         var fs = Npm.require('fs');
         var path = Npm.require('path');
         var basepath = path.resolve('.').split('.meteor')[0];
@@ -153,17 +207,30 @@ if (Meteor.isServer) {
         var workbookJson = excel.utils.sheet_to_json( sheet, options );
 
         console.log("OutlookRecords: " + workbookJson.length);
-        // insert json into Meetings Collection
+        // insert json into Meetings Collection without duplication
         for (var i = 0 ; i < workbookJson.length; i++ ) {
           var meetInstance = json_to_meetObj(workbookJson[i]);
           if (meetInstance) {
-            found = Meetings.find({"title": meetInstance["title"],
-                                   "date": meetInstance["date"] });
+            var found;
+            if (meetInstance["title"] != " ") {
+              found = Meetings.find({
+                "title": meetInstance["title"],
+                "type": meetInstance["type"],
+                "date": meetInstance["date"]});
+            } else {
+              found = Meetings.find({
+                "type": meetInstance["type"],
+                "date": meetInstance["date"]});
+            }
+
             if (found.count() <= 0) {
               Meetings.insert(meetInstance);
-            } else {
-              console.log(meetInstance["title"]);
               console.log(meetInstance["date"]);
+              console.log(meetInstance["group"]);
+              console.log(meetInstance["title"]);
+            } else {
+              //console.log(meetInstance["title"]);
+              //console.log(meetInstance["date"]);
             }
           } else {
             // console.log(workbookJson[i]);

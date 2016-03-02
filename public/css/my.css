@@ -4,6 +4,9 @@ label {
   text-align: right;
 }
 
+.table > tbody > tr > td {
+     vertical-align: middle;
+}
 /* For outline button */
 .btn-outline {
     background-color: transparent;

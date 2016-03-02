@@ -9,6 +9,7 @@ Schemas.Meeting = new SimpleSchema({
   },*/
   projectID: {
     type: String,
+    label: "项目编号",
     optional: true
   },
   type: {
@@ -115,11 +116,11 @@ if (Meteor.isClient) {
 
     passColor: function(passStatus) {
       if (passStatus == "pass" ) {
-        return "green";
+        return "#5cb85c";
       } else if ( passStatus == "progress" ) {
-        return "yellow";
+        return "#f0ad4e";
       } else {
-        return "red";
+        return "#d9534f";
       }
     },
 
@@ -129,7 +130,7 @@ if (Meteor.isClient) {
       } else if ( passStatus == "progress" ) {
         return "跟进";
       } else {
-        return "否";
+        return "否x";
       }
     }
   });
