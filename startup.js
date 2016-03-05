@@ -120,20 +120,13 @@ var json_to_meetObj = function (jsonObj) {
 
 
 // TODO: move to /client/init.js
-if (Meteor.isClient) {
-  Uploader.localisation = {
-    browse: "Upload Outlook Schedule"
-  }
 
-  Uploader.finished = function(index, fileInfo, templateContext) {
-    // set session and rerender table 
-    docs = Meetings.find();
-    ids = [];
-    docs.forEach( function(element){
-      ids.push(element._id);
-    });
-    Session.set('MeetingTargetIDs', ids);
-  }
+if (Meteor.isClient) {
+
+  Meteor.startup(function() {
+
+  });
+
 }
 
 // TODO: move to /server/init.js
@@ -155,13 +148,15 @@ if (Meteor.isServer) {
     var baseDir = "";
     if (process.env.PWD) {
       baseDir = process.env.PWD + "/uploads";
+      tempDir = baseDir + "/tmp";
     } else {
       var path = Npm.require('path');
-      var baseDir = path.resolve('.').split('.meteor')[0] + "uploads";
+      baseDir = path.resolve('.').split('.meteor')[0] + "uploads";
+      tempDir = baseDir + "\\tmp";
     }
 
     UploadServer.init({
-      tmpDir: baseDir + "\\tmp",
+      tmpDir: tempDir,
       uploadDir: baseDir,
       checkCreateDirectories: true,  // create the directories for you
       overwrite: true,

@@ -75,7 +75,7 @@
           <th>  </th>
       </tr>
       {{#each meetings}}
-        <tr>
+        <tr id="{{_id}}">
             <!--<td> {{projectID}} </td>-->
             <td width="15%"> {{type}} </td>
             <td width="15%"> {{group}} </td>
@@ -102,7 +102,11 @@
   </table>
 
   <div class="row">
-    {{> upload_bootstrap fileTypes=".xlsx" multiple=false overwrite=true}}
+    {{> upload_bootstrap
+        fileTypes=".xlsx"
+        multiple=false
+        overwrite=true
+        callbacks=uploadCallback }}
     <!--
     <button type="submit" class="btn btn-primary btn-outline">
       <span class="glyphicon glyphicon-thumbs-up"></span>

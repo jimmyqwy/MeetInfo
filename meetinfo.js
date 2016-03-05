@@ -94,11 +94,21 @@ if (Meteor.isClient) {
     }
   });
 
+  /////////////
+  // Uploader
+  Uploader.localisation = {
+    browse: "Upload Outlook Schedule"
+  };
+
+  meetingBackEndIds = new Mongo.Collection('meetingIDs');
+  Meteor.subscribe("meetingsBackEnd");
+
   /////////////////////////////////////////////
   // Template "meetinginfo" (List of meeting information)
   /////////////////////////////////////////////
 
   Session.setDefault("searchKeyWord", "");
+
 
   // send data to template
   Template.meetinfo.helpers({
@@ -106,11 +116,17 @@ if (Meteor.isClient) {
 
     meetings: function () {
       ids = Session.get('MeetingTargetIDs');
-      console.log(ids);
-      if (ids) {
+      if (ids && ids.length > 0) {
         return Meetings.find({"_id" : {"$in" : ids}});
       } else {
-        return [];
+        //return [];
+        var ids = [];
+        docs = meetingBackEndIds.find();
+        docs.forEach( function(element){
+          ids.push(element);
+        });
+        console.log(ids);
+        return Meetings.find({"_id" : {"$in" : ids}});
       }
     },
 
@@ -158,16 +174,25 @@ if (Meteor.isClient) {
       Session.set('MeetingTargetIDs', ids);
     },
 
+    'change .js-search-text': function(event) {
+      //console.log(event.target);
+      Session.set("searchKeyWord", event.target.value);
+    },
+
     'click .js-select-meeting': function(event) {
       //console.log(this._id);
       //console.log(Meetings.find({"_id": this._id}));
       Session.set("selectedMeetingID", this._id);
     },
 
-    'change .js-search-text': function(event) {
-      console.log(event.target);
-      Session.set("searchKeyWord", event.target.value);
+    'click .js-delete-meeting': function(event) {
+      var meet_id = this._id;
+      $("tr#" + meet_id).hide('slow', function() {
+        Meetings.remove({"_id" : meet_id});
+      });
+
     }
+
   });
 
   /////////////////////////////////////////////
@@ -205,10 +230,12 @@ if (Meteor.isClient) {
 
 
 if (Meteor.isServer) {
-/*  // at startup.js
-  Meteor.startup(function () {
-    // code to run on server at startup
+  Meteor.publish('meetingsBackEnd', function() {
+    var self = this;
+    console.log("MeetingPublish: "+ Meetings.find().count());
+    Meetings.find().forEach(function(meeting) {
+      self.added('meetingIDs', Random.id(), meeting._id);
+    })
+    self.ready();
   });
-  */
-
 }
