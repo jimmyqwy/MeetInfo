@@ -1,75 +1,78 @@
-/*var local_meeting_data = [
-  {
-    ID: "1",
-    projectID: "JTDK011300013",
-    type: "Decision",
-    group: "Insurance",
-    system: "Investigate",
-    organizer: "YE FEI",
-    title: "Many Details",
-    date: "2016-01-01",
-    result: "blank",
-    pass: true,
-    comment: "comments"
-  },
-  {
-    ID: "2",
-    projectID: "JTDK011300013",
-    type: "Decision",
-    group: "Insurance2",
-    system: "Investigate2",
-    organizer: "YE FEI",
-    title: "Many Details2",
-    date: "2016-01-02",
-    result: "blank",
-    pass: true,
-    comment: "comments"
-  },
-  {
-    ID: "3",
-    projectID: "JTDK011300013",
-    type: "Decision",
-    group: "Insurance3",
-    system: "Investigate3",
-    organizer: "YE FEI",
-    title: "Many Details3",
-    date: "2016-01-03",
-    result: "blank",
-    pass: true,
-    comment: "comments"
-  },
-  {
-    ID: "4",
-    projectID: "JTDK011500025",
-    type: "Decision",
-    group: "Insurance4",
-    system: "Investigate4",
-    organizer: "YE FEI",
-    title: "Many Details4",
-    date: "2016-01-04",
-    result: "blank",
-    pass: true,
-    comment: "comments"
-  },
-  {
-    ID: "5",
-    projectID: "JTDK015500099",
-    type: "Decision",
-    group: "Insurance5",
-    system: "Investigate5",
-    organizer: "YE FEI",
-    title: "Many Details5",
-    date: "2016-01-05",
-    result: "blank",
-    pass: true,
-    comment: "comments"
-  }
-];
-*/
 
 function pad(n){
   return n < 10 ? '0' + n : n ;
 }
+
+
+// SYSTEM ENTIRE Json file => fill up the project object
+var json_to_projectObj = function (jsonObj) {
+  if (jsonObj) {
+    return {
+      projectID : jsonObj[1],
+      project_full_name: jsonObj[0],
+      project_short_name: jsonObj[2],
+      project_alias_name: jsonObj[3],
+      project_type : "other",
+      system_status : jsonObj[5],
+      group : jsonObj[19],
+      group_product : "",
+      union_group : jsonObj[20],
+      consult_group : jsonObj[21],
+      group_cnt : 1,
+      project_name : jsonObj[2],
+      target_company : "",
+      industry : jsonObj[18],
+      manage_plat : jsonObj[19],
+      project_manager : jsonObj[22],
+      proposed_amount : 0,
+      pass_or_not : "progress",
+      pass_date : "",
+      pass_condition : "",
+      currency : jsonObj[32],
+      pass_invest : 0,
+      pass_invest_CNY : 0,
+      proposed_invest_plat : "",
+      pre_money : 0,
+      post_money : 0,
+      post_deal_share : "",
+      contract_or_not : "no",
+      contract_date : "",
+      invest_or_not : "",
+      invest_date : "",
+      invest_plat : jsonObj[30],
+      real_pay : 0,
+      real_pay_CNY : 0,
+      note_bond : jsonObj[39]
+    }
+  }
+};
+
+var InitInvestSystem = function () {
+  var fs = Npm.require('fs');
+  var path = Npm.require('path');
+  var basepath = path.resolve('.').split('.meteor')[0];
+
+  // Get excel
+  console.log("Getting xlsx...");
+  var excel = new Excel('xlsx');
+  var workbook = excel.readFile(basepath + "private\\BasicProjectsInfo.xlsx");
+  var sheetName = workbook.SheetNames;
+  var sheet = workbook.Sheets[workbook.SheetNames[0]];
+  var options = { header : 1 }
+  // Generate the JSON
+  var workbookJson = excel.utils.sheet_to_json( sheet, options );
+
+  console.log("Project Counts: " + workbookJson.length);
+  // insert json into Meetings Collection without duplication
+  for (var i = 0 ; i < workbookJson.length; i++ ) {
+    var meetInstance = json_to_projectObj(workbookJson[i]);
+    if (meetInstance) {
+      Projects.insert(meetInstance);
+    }
+  }
+  console.log("Project Collections: " + Projects.find().count());
+};
+
 
 // OUTLOOK file logic related.
 var json_to_meetObj = function (jsonObj) {
@@ -104,23 +107,96 @@ var json_to_meetObj = function (jsonObj) {
       if (!title_body)  title_body = " ";
       return {
         projectID: "",
-        type: meet_type,
-        group: meet_group,
-        system: meet_system,
-        organizer: jsonObj[9], //jsonObj["会议组织者"],
-        title: title_body,
-        date: jsonObj[1].split('/').map(pad).join('-'), //jsonObj["开始日期"],
-        result: "",
-        pass: "progress",
-        comment: ""
+        meeting_type: meet_type,
+        meeting_group: meet_group,
+        meeting_system: meet_system,
+        meeting_organizer: jsonObj[9], //jsonObj["会议组织者"],
+        meeting_title: title_body,
+        meeting_date: jsonObj[1].split('/').map(pad).join('-'), //jsonObj["开始日期"],
+        meeting_result: "",
+        meeting_pass: "progress",
+        meeting_comment: ""
       }
     }
   }
 };
 
+var fillUpProjectInfo = function(projectInfo) {
+  resultJson = {};
+  for(var k in Schemas.Project.schema()) {
+    resultJson[k] = projectInfo[k];
+  }
+  return resultJson;
+};
 
+var InitMeetings = function(fileInfo) {
+  //console.log(formFields);
+  var fs = Npm.require('fs');
+  var path = Npm.require('path');
+  var basepath = path.resolve('.').split('.meteor')[0];
+
+  // Get excel
+  var excel = new Excel('xlsx');
+  var workbook = excel.readFile(basepath + "uploads/" + fileInfo.name);
+  var sheetName = workbook.SheetNames;
+  var sheet = workbook.Sheets[workbook.SheetNames[0]];
+  var options = { header : 1 }
+  // Generate the JSON
+  var workbookJson = excel.utils.sheet_to_json( sheet, options );
+
+  console.log("OutlookRecords: " + workbookJson.length);
+  // insert json into Meetings Collection without duplication
+  for (var i = 0 ; i < workbookJson.length; i++ ) {
+    var meetInstance = json_to_meetObj(workbookJson[i]);
+    if (meetInstance) {
+      var found;
+      if (meetInstance["title"] != " ") {
+        found = Meetings.find({
+          "meeting_title": meetInstance["meeting_title"],
+          "meeting_type": meetInstance["meeting_type"],
+          "meeting_date": meetInstance["meeting_date"]});
+      } else {
+        found = Meetings.find({
+          "meeting_type": meetInstance["meeting_type"],
+          "meeting_date": meetInstance["meeting_date"]});
+      }
+
+      if (found.count() <= 0) {
+        Meetings.insert(meetInstance);
+        //console.log(meetInstance["meeting_date"]);
+        //console.log(meetInstance["meeting_group"]);
+        //console.log(meetInstance["meeting_title"]);
+      } else {
+        //console.log(meetInstance["title"]);
+        //console.log(meetInstance["date"]);
+      }
+    } else {
+      // console.log(workbookJson[i]);
+    }
+  }
+  console.log("Meetings: " + Meetings.find().count());
+
+
+  console.log("Start to Combine...");
+  // Combine Meetings and Projects
+  Projects.find().forEach(function(project) {
+    var short_name = project["project_short_name"];
+    var alias_name = project["project_alias_name"];
+    var full_name = project["project_full_name"];
+    var pattern = "(" + short_name + "|" + alias_name + "|" + full_name + ")";
+    // fill up meeting info with detailed project info
+    Meetings.update({"meeting_title": {$regex: short_name, $options: 'i'} },
+                    { $set: fillUpProjectInfo(project)},
+                    {upsert: false});
+  });
+  console.log("Done!");
+}
+
+
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
 // TODO: move to /client/init.js
-
+///////////////////////////////////////////////////////
 if (Meteor.isClient) {
 
   Meteor.startup(function() {
@@ -133,17 +209,17 @@ if (Meteor.isClient) {
 if (Meteor.isServer) {
   Meteor.startup(function () {
 
-    //EntireData.remove({});
-    Meetings.remove({}); // targets (for editing based on searched results)
-    /*if (Meetings.find().count() == 0) {
-      for ( var i = 0 ; i < local_meeting_data.length; i++ ) {
-        Meetings.insert(local_meeting_data[i]);
-      }
-    }  // end of if have no meetings
-    console.log("Startup :" + Meetings.find().count());
-    */
+    // TODO: need comment out the following two statements.
+    Meetings.remove({});
+    //Projects.remove({});
 
-    // Initialize uploader
+    // get data from system database
+    console.log("Project #:" + Projects.find().count());
+    if (Projects.find().count() == 0 ) {
+      InitInvestSystem();
+    }
+
+    // Initialize uploader for meeeting information
     //var baseDir = process.env.PWD ? process.env.PWD + "/uploads" : "/uploads";
     var baseDir = "";
     if (process.env.PWD) {
@@ -187,51 +263,7 @@ if (Meteor.isServer) {
       */
 
       finished: function(fileInfo, formFields) {
-        //console.log(formFields);
-        var fs = Npm.require('fs');
-        var path = Npm.require('path');
-        var basepath = path.resolve('.').split('.meteor')[0];
-
-        // Get excel
-        var excel = new Excel('xlsx');
-        var workbook = excel.readFile(basepath + "uploads/" + fileInfo.name);
-        var sheetName = workbook.SheetNames;
-        var sheet = workbook.Sheets[workbook.SheetNames[0]];
-        var options = { header : 1 }
-        // Generate the JSON
-        var workbookJson = excel.utils.sheet_to_json( sheet, options );
-
-        console.log("OutlookRecords: " + workbookJson.length);
-        // insert json into Meetings Collection without duplication
-        for (var i = 0 ; i < workbookJson.length; i++ ) {
-          var meetInstance = json_to_meetObj(workbookJson[i]);
-          if (meetInstance) {
-            var found;
-            if (meetInstance["title"] != " ") {
-              found = Meetings.find({
-                "title": meetInstance["title"],
-                "type": meetInstance["type"],
-                "date": meetInstance["date"]});
-            } else {
-              found = Meetings.find({
-                "type": meetInstance["type"],
-                "date": meetInstance["date"]});
-            }
-
-            if (found.count() <= 0) {
-              Meetings.insert(meetInstance);
-              console.log(meetInstance["date"]);
-              console.log(meetInstance["group"]);
-              console.log(meetInstance["title"]);
-            } else {
-              //console.log(meetInstance["title"]);
-              //console.log(meetInstance["date"]);
-            }
-          } else {
-            // console.log(workbookJson[i]);
-          }
-        }
-        console.log("Meetings: " + Meetings.find().count());
+        InitMeetings(fileInfo);
       }
     });
 

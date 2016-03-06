@@ -1,69 +1,3 @@
-Schemas = {};
-
-Schemas.Meeting = new SimpleSchema({
-  /*ID: {
-    type: String,
-    autoform: {
-      omit: true
-    }
-  },*/
-  projectID: {
-    type: String,
-    label: "项目编号",
-    optional: true
-  },
-  type: {
-    type: String,
-    optional: true
-  },
-  group: {
-    type: String,
-    optional: true
-  },
-  system: {
-    type: String,
-    optional: true
-  },
-  organizer: {
-    type: String,
-    optional: true
-  },
-  title: {
-    type: String,
-    optional: true
-  },
-  date : {
-    type: String,
-    optional: true,
-    autoform: {
-      afFieldInput: {
-        type: "date"
-      }
-    }
-  },
-  result: {
-    type: String,
-    optional: true
-  },
-  pass: {
-    type: String,
-    optional: true,
-    autoform: {
-      type: "select",
-      options: function() {
-        return [
-          {label: "是", value: "pass"},
-          {label: "跟进", value: "progress"},
-          {label: "否", value: "fail"}
-        ]
-      }
-    }
-  },
-  comment: {
-    type: String,
-    optional: true
-  }
-});
 
 var Collections = {};
 
@@ -71,6 +5,9 @@ var Collections = {};
 //EntireData.attachSchema(Schemas.Meeting);
 Meetings = Collections.Meetings = new Mongo.Collection("Meeting");
 Meetings.attachSchema(Schemas.Meeting);
+
+Projects = Collections.Projects = new Mongo.Collection("Project");
+Projects.attachSchema(Schemas.Project);
 
 /////////////////////////////////////////////////////////////////////////
 // Client site
@@ -100,8 +37,8 @@ if (Meteor.isClient) {
     browse: "Upload Outlook Schedule"
   };
 
-  meetingBackEndIds = new Mongo.Collection('meetingIDs');
-  Meteor.subscribe("meetingsBackEnd");
+  //meetingBackEndIds = new Mongo.Collection('meetingIDs');
+  //Meteor.subscribe("meetingsBackEnd");
 
   /////////////////////////////////////////////
   // Template "meetinginfo" (List of meeting information)
@@ -122,7 +59,7 @@ if (Meteor.isClient) {
         //return [];
         var ids = [];
         docs = meetingBackEndIds.find();
-        docs.forEach( function(element){
+        docs.forEach( function(element) {
           ids.push(element);
         });
         console.log(ids);
@@ -230,6 +167,7 @@ if (Meteor.isClient) {
 
 
 if (Meteor.isServer) {
+  /*
   Meteor.publish('meetingsBackEnd', function() {
     var self = this;
     console.log("MeetingPublish: "+ Meetings.find().count());
@@ -238,4 +176,5 @@ if (Meteor.isServer) {
     })
     self.ready();
   });
+  */
 }
