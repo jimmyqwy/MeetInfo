@@ -8,41 +8,41 @@ function pad(n){
 var json_to_projectObj = function (jsonObj) {
   if (jsonObj) {
     return {
-      projectID : jsonObj[1],
-      project_full_name: jsonObj[0],
-      project_short_name: jsonObj[2],
-      project_alias_name: jsonObj[3],
+      projectID : jsonObj[1] ? jsonObj[1] : "N/A",
+      project_full_name: jsonObj[0] ? jsonObj[0] : "N/A",
+      project_short_name: jsonObj[2] ? jsonObj[2] : "N/A",
+      project_alias_name: jsonObj[3] ? jsonObj[3] : "N/A",
       project_type : "other",
-      system_status : jsonObj[5],
-      group : jsonObj[19],
-      group_product : "",
-      union_group : jsonObj[20],
-      consult_group : jsonObj[21],
+      system_status : jsonObj[5] ? jsonObj[5] : "N/A",
+      group : jsonObj[19] ? jsonObj[19] : "N/A",
+      group_product : "N/A",
+      union_group : jsonObj[20] ? jsonObj[20] : "N/A",
+      consult_group : jsonObj[21] ? jsonObj[21] : "N/A",
       group_cnt : 1,
-      project_name : jsonObj[2],
-      target_company : "",
-      industry : jsonObj[18],
-      manage_plat : jsonObj[19],
-      project_manager : jsonObj[22],
+      project_name : jsonObj[2] ? jsonObj[2] : "N/A",
+      target_company : "N/A",
+      industry : jsonObj[18] && jsonObj[18].trim() != "" ? jsonObj[18] : "N/A",
+      manage_plat : jsonObj[19] && jsonObj[19].trim() != "" ? jsonObj[19] : "N/A",
+      project_manager : jsonObj[22] ? jsonObj[22] : "N/A",
       proposed_amount : 0,
       pass_or_not : "progress",
-      pass_date : "",
-      pass_condition : "",
-      currency : jsonObj[32],
+      pass_date : "N/A",
+      pass_condition : "N/A",
+      currency : jsonObj[32] ? jsonObj[32] : "N/A",
       pass_invest : 0,
       pass_invest_CNY : 0,
-      proposed_invest_plat : "",
+      proposed_invest_plat : "N/A",
       pre_money : 0,
       post_money : 0,
-      post_deal_share : "",
+      post_deal_share : "N/A",
       contract_or_not : "no",
-      contract_date : "",
-      invest_or_not : "",
-      invest_date : "",
-      invest_plat : jsonObj[30],
+      contract_date : "N/A",
+      invest_or_not : "N/A",
+      invest_date : "N/A",
+      invest_plat : jsonObj[30] ? jsonObj[30] : "N/A",
       real_pay : 0,
       real_pay_CNY : 0,
-      note_bond : jsonObj[39]
+      note_bond : jsonObj[39] ? jsonObj[39] : "N/A",
     }
   }
 };
@@ -93,8 +93,8 @@ var json_to_meetObj = function (jsonObj) {
       if (separateSpace <= separateLeftBrace ) {  // space should be higher than ]
         separateSpace = meet_title.substring(separateRightBrace, meet_title.length).indexOf(" ");
       }
-      var meet_group = " ";
-      var title_body = " ";
+      var meet_group = "N/A";
+      var title_body = "N/A";
       if (separateSpace != -1) {
         meet_group = meet_title.substring(separateRightBrace + 1, separateSpace);
         title_body = meet_title.substring(separateSpace + 1, meet_title.length);
@@ -104,18 +104,18 @@ var json_to_meetObj = function (jsonObj) {
           title_body = meet_title.substring(separateRightBrace + 1, meet_title.length);
         }
       }
-      if (!title_body)  title_body = " ";
+      if (!title_body)  title_body = "N/A";
       return {
-        projectID: "",
-        meeting_type: meet_type,
-        meeting_group: meet_group,
-        meeting_system: meet_system,
-        meeting_organizer: jsonObj[9], //jsonObj["会议组织者"],
-        meeting_title: title_body,
-        meeting_date: jsonObj[1].split('/').map(pad).join('-'), //jsonObj["开始日期"],
-        meeting_result: "",
+        projectID: "N/A",
+        meeting_type: meet_type ? meet_type : "N/A",
+        meeting_group: meet_group ? meet_group : "N/A",
+        meeting_system: meet_system ? meet_group : "N/A",
+        meeting_organizer: jsonObj[9] ? jsonObj[9] : "N/A", //jsonObj["会议组织者"],
+        meeting_title: title_body ? title_body : "N/A",
+        meeting_date: jsonObj[1] ? jsonObj[1].split('/').map(pad).join('-') : "N/A", //jsonObj["开始日期"],
+        meeting_result: "N/A",
         meeting_pass: "progress",
-        meeting_comment: ""
+        meeting_comment: "N/A"
       }
     }
   }
@@ -211,7 +211,7 @@ if (Meteor.isServer) {
 
     // TODO: need comment out the following two statements.
     Meetings.remove({});
-    //Projects.remove({});
+    Projects.remove({});
 
     // get data from system database
     console.log("Project #:" + Projects.find().count());

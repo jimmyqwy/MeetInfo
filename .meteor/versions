@@ -6,6 +6,7 @@ aldeed:schema-index@1.0.1
 aldeed:simple-schema@1.5.3
 autopublish@1.0.4
 autoupdate@1.2.4
+axw:json2csv@0.1.0
 babel-compiler@5.8.24_1
 babel-runtime@0.1.4
 base64@1.0.4

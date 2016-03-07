@@ -7,6 +7,15 @@ label {
 .table > tbody > tr > td {
      vertical-align: middle;
 }
+
+.previous {
+  text-align: left;
+}
+
+.next {
+  text-align: right;
+}
+
 /* For outline button */
 .btn-outline {
     background-color: transparent;

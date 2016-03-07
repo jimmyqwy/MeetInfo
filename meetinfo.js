@@ -128,6 +128,12 @@ if (Meteor.isClient) {
         Meetings.remove({"_id" : meet_id});
       });
 
+    },
+
+    'click #download' : function(event) {
+      csv = json2csv(Meetings.find().fetch(), true, true);
+      event.target.href = "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(csv);
+      event.target.download = "meetings_export.csv";
     }
 
   });
