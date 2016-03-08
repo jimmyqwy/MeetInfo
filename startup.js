@@ -209,9 +209,13 @@ if (Meteor.isClient) {
 if (Meteor.isServer) {
   Meteor.startup(function () {
 
+    //Inject.rawModHtml('doSomething', function(html) {
+    //  return html.replace(/<html>/, '<!-- HTML 5 -->\n<html class="no-js" lang="en">');
+    //});
+
     // TODO: need comment out the following two statements.
     Meetings.remove({});
-    Projects.remove({});
+    //Projects.remove({});
 
     // get data from system database
     console.log("Project #:" + Projects.find().count());

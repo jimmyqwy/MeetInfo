@@ -9,6 +9,17 @@ Meetings.attachSchema(Schemas.Meeting);
 Projects = Collections.Projects = new Mongo.Collection("Project");
 Projects.attachSchema(Schemas.Project);
 
+// FS collection uploaded usage
+//var fs = Npm.require('fs');
+//var path = Npm.require('path');
+//var basepath = path.resolve('.').split('.meteor')[0];
+basepath = 'C:\\Users\\PZ7W60\\Repository\\MeetInfo\\';
+console.log(basepath);
+
+Schedules = new FS.Collection("schedule", {
+  stores: [new FS.Store.FileSystem("schedule", {path: basepath + "uploads/"})]
+});
+
 /////////////////////////////////////////////////////////////////////////
 // Client site
 /////////////////////////////////////////////////////////////////////////
@@ -91,6 +102,27 @@ if (Meteor.isClient) {
   // events
   Template.meetinfo.events({
 
+    // upload
+    'change .js-schedule-upload': function(event, template) {
+      var files = event.target.files;
+      console.log(files);
+      for (var i = 0, ln = files.length; i < ln; i++) {
+        Schedules.insert(files[i], function (err, fileObj) {
+          // Inserted new doc with ID fileObj._id, and kicked off the data upload using HTTP
+        });
+      }
+      /*
+      FS.Utility.eachFile(event, function(file) {
+        console.log(file);
+        Schedules.insert(file, function (err, fileObj) {
+          //If !err, we have inserted new doc with ID fileObj._id, and
+          //kicked off the data upload using HTTP
+          console.log(fileObj._id);
+        });
+      });
+      */
+    },
+
     'click .js-search': function(event) {
       keyWord = Session.get("searchKeyWord");
       console.log("Search Key Word: " + keyWord);
@@ -131,9 +163,18 @@ if (Meteor.isClient) {
     },
 
     'click #download' : function(event) {
-      csv = json2csv(Meetings.find().fetch(), true, true);
-      event.target.href = "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(csv);
-      event.target.download = "meetings_export.csv";
+      var csvLabel = [];
+      var exportSchema = Schemas.Meeting.schema();
+      for(var k in exportSchema) {
+        csvLabel.push(exportSchema[k]["label"]);
+      }
+      if (Meetings.find().count() > 0) {
+        Meteor.myFunctions.JSONToCSVConvertor("meetings_export",
+          Meetings.find().fetch(), csvLabel);
+      }
+      //csv = json2csv(Meetings.find().fetch(), true, true);
+      //event.target.href = "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(csv);
+      //event.target.download = "meetings_export.csv";
     }
 
   });
@@ -173,6 +214,27 @@ if (Meteor.isClient) {
 
 
 if (Meteor.isServer) {
+
+/*
+  // FS collection uploaded usage
+  var fs = Npm.require('fs');
+  var path = Npm.require('path');
+  var basepath = path.resolve('.').split('.meteor')[0];
+  console.log(basepath);
+
+  Schedules = new FS.Collection("schedule", {
+    stores: [new FS.Store.FileSystem("schedule", {path: basepath + "uploads/"})]
+  });
+  */
+
+  Schedules.allow({
+    'insert': function () {
+      // add custom authentication code here
+      return true;
+    }
+  });
+
+  Schedules.remove({});
   /*
   Meteor.publish('meetingsBackEnd', function() {
     var self = this;
