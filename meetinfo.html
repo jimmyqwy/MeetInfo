@@ -34,6 +34,7 @@
     </style>
 </head>
 <body>
+    {{> meeting_add_form}}
     <div class="row">
         <div class="col-xs-8  col-xs-offset-2 col-md-8 col-md-offset-2">
         <!--<div class="col-md-5">-->
@@ -54,6 +55,7 @@
         <h2> ~ Meeting Info ~ </h2>
       </div>
     </div>
+<!--
     <div class="row">
       <div class="col-xs-12 col-md-12 vcenter">
         {{> upload_bootstrap
@@ -70,7 +72,9 @@
                data-buttonName="btn-primary" data-buttonBefore="true"/>
       </div>
     </div>
+-->
   </div>
+
   <div class="row">
     <div class="col-xs-12 col-md-12 col-lg-12">
       <div class="input-group">
@@ -125,14 +129,53 @@
   </table>
   <div class="row">
     <div class="col-xs-6 col-md-6 col-lg-6 previous">
-      <button class="js-add-meeting btn btn-warning" type="button">Add</button>
+      <button type="submit" class="js-show-meeting-form btn btn-warning">
+          <span class="glyphicon glyphicon-plus"></span>
+          Add Meeting
+      </button>
     </div>
     <div class="col-xs-6 col-md-6 col-lg-6 next">
-      -<button id="download" class="js-export-csv btn btn-danger" type="button">Export</button>
+      <button id="download" class="js-export-csv btn btn-danger" type="button">Export</button>
       <!--<a href="#" class="js-export-csv btn btn-danger" role="button" id="download">Export</a>-->
     </div>
   </div>
+</template>
 
+<template name="meeting_add_form">
+  <div class="modal fade" id="meeting_add_form">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title"> Add a Meeting </div>
+        </div>
+        <div class="modal-body">
+          {{#autoForm id="addMeetingInfo"
+                      type="insert"
+                      collection=Collections.Meetings}}
+            {{#each afFieldNames}}
+              {{> afQuickField
+                  name=this.name
+                  options=afOptionsFromSchema
+                  template="bootstrap3-horizontal"
+                  label-class="col-sm-2 col-md-2 vcenter"
+                  input-col-class="col-sm-8 col-md-8 vcenter"}}
+            {{/each}}
+            <div class="form-group">
+              <button type="submit" class="js-add-meeting btn btn-success">
+                  <span class="glyphicon glyphicon-plus"></span>
+                  Add Meeting
+              </button>
+              <button class="btn btn-warning" data-dismiss="modal">
+                  Cancel
+              </button>
+            </div>
+          {{/autoForm}}
+        </div>
+        <div class="modal-footer">
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <template name="meetingUpdate">
@@ -162,9 +205,10 @@
           <span class="glyphicon glyphicon-thumbs-up"></span>
           Save changes
       </button>
+      <!--
       <button class="btn btn-default .js-update-reset" disabled="{{disableButtons}}">
         Reset
-      </button>
+      </button> -->
     </div>
   {{/autoForm}}
 </template>

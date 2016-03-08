@@ -13,12 +13,12 @@ Projects.attachSchema(Schemas.Project);
 //var fs = Npm.require('fs');
 //var path = Npm.require('path');
 //var basepath = path.resolve('.').split('.meteor')[0];
-basepath = 'C:\\Users\\PZ7W60\\Repository\\MeetInfo\\';
-console.log(basepath);
+//basepath = 'C:\\Users\\PZ7W60\\Repository\\MeetInfo\\';
+//console.log(basepath);
 
-Schedules = new FS.Collection("schedule", {
-  stores: [new FS.Store.FileSystem("schedule", {path: basepath + "uploads/"})]
-});
+//Schedules = new FS.Collection("schedule", {
+//  stores: [new FS.Store.FileSystem("schedule", {path: basepath + "uploads/"})]
+//});
 
 /////////////////////////////////////////////////////////////////////////
 // Client site
@@ -66,7 +66,7 @@ if (Meteor.isClient) {
       ids = Session.get('MeetingTargetIDs');
       if (ids && ids.length > 0) {
         return Meetings.find({"_id" : {"$in" : ids}});
-      } else {
+      } /*else {
         //return [];
         var ids = [];
         docs = meetingBackEndIds.find();
@@ -75,7 +75,7 @@ if (Meteor.isClient) {
         });
         console.log(ids);
         return Meetings.find({"_id" : {"$in" : ids}});
-      }
+      }*/
     },
 
     passColor: function(passStatus) {
@@ -132,7 +132,7 @@ if (Meteor.isClient) {
       } else {
         docs = Meetings.find({"projectID": keyWord});
         if (docs.count() <= 0) {
-          docs = Meetings.find({"title": {$regex: keyWord, $options: 'i'} });
+          docs = Meetings.find({"meeting_title": {$regex: keyWord, $options: 'i'} });
         }
       }
 
@@ -160,6 +160,10 @@ if (Meteor.isClient) {
         Meetings.remove({"_id" : meet_id});
       });
 
+    },
+
+    'click .js-show-meeting-form' : function(event) {
+      $("#meeting_add_form").modal('show');
     },
 
     'click #download' : function(event) {
@@ -208,6 +212,18 @@ if (Meteor.isClient) {
     },
   });
 
+  /////////////////////////////////////////////
+  // Template add meeting
+  /////////////////////////////////////////////
+  Template.meeting_add_form.events({
+    'click .js-add-meeting': function () {
+      //TODO: Check meeting duplicate
+      //TODO: refresh session
+      console.log("bbb");
+      $('#meeting_add_form').modal('hide');
+    }
+  });
+
   /////////////////////////////////////////////////////////////////////////
 
 }
@@ -225,7 +241,7 @@ if (Meteor.isServer) {
   Schedules = new FS.Collection("schedule", {
     stores: [new FS.Store.FileSystem("schedule", {path: basepath + "uploads/"})]
   });
-  */
+
 
   Schedules.allow({
     'insert': function () {
@@ -235,6 +251,7 @@ if (Meteor.isServer) {
   });
 
   Schedules.remove({});
+  */
   /*
   Meteor.publish('meetingsBackEnd', function() {
     var self = this;

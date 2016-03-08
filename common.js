@@ -358,6 +358,11 @@ Schemas.Meeting = new SimpleSchema({
     label: "所属行业",
     optional:true
   },
+  strategy_label: {
+    type: String,
+    label: "战略标签",
+    optional:true
+  },
   manage_plat: { // = project.manage_plat(L20)
     type: String,
     label: "管理平台",

@@ -22,6 +22,7 @@ var json_to_projectObj = function (jsonObj) {
       project_name : jsonObj[2] ? jsonObj[2] : "N/A",
       target_company : "N/A",
       industry : jsonObj[18] && jsonObj[18].trim() != "" ? jsonObj[18] : "N/A",
+      strategy_label: "N/A",
       manage_plat : jsonObj[19] && jsonObj[19].trim() != "" ? jsonObj[19] : "N/A",
       project_manager : jsonObj[22] ? jsonObj[22] : "N/A",
       proposed_amount : 0,
@@ -129,7 +130,7 @@ var fillUpProjectInfo = function(projectInfo) {
   return resultJson;
 };
 
-var InitMeetings = function(fileInfo) {
+var InitMeetings = function(dirInfo, fileInfo) {
   //console.log(formFields);
   var fs = Npm.require('fs');
   var path = Npm.require('path');
@@ -137,7 +138,7 @@ var InitMeetings = function(fileInfo) {
 
   // Get excel
   var excel = new Excel('xlsx');
-  var workbook = excel.readFile(basepath + "uploads/" + fileInfo.name);
+  var workbook = excel.readFile(basepath + dirInfo + "/" + fileInfo.name);
   var sheetName = workbook.SheetNames;
   var sheet = workbook.Sheets[workbook.SheetNames[0]];
   var options = { header : 1 }
@@ -214,7 +215,7 @@ if (Meteor.isServer) {
     //});
 
     // TODO: need comment out the following two statements.
-    Meetings.remove({});
+    //Meetings.remove({});
     //Projects.remove({});
 
     // get data from system database
@@ -234,6 +235,9 @@ if (Meteor.isServer) {
       baseDir = path.resolve('.').split('.meteor')[0] + "uploads";
       tempDir = baseDir + "\\tmp";
     }
+
+    // TODO: TEMP Solution
+    InitMeetings("private", {name: "Meeting.xlsx"});
 
     UploadServer.init({
       tmpDir: tempDir,
@@ -267,7 +271,7 @@ if (Meteor.isServer) {
       */
 
       finished: function(fileInfo, formFields) {
-        InitMeetings(fileInfo);
+        InitMeetings("uploads", fileInfo);
       }
     });
 
