@@ -151,7 +151,8 @@
         <div class="modal-body">
           {{#autoForm id="addMeetingInfo"
                       type="insert"
-                      collection=Collections.Meetings}}
+                      collection=Collections.Meetings
+                      validation=submit}}
             {{#each afFieldNames}}
               {{> afQuickField
                   name=this.name
@@ -191,7 +192,8 @@
   {{#autoForm id="meetingInfo"
               type=formType
               collection=Collections.Meetings
-              doc=selectedMeetingDoc }}
+              doc=selectedMeetingDoc
+              validation=submit}}
     {{#each afFieldNames}}
       {{> afQuickField
           name=this.name

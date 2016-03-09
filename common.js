@@ -265,7 +265,8 @@ Schemas.Meeting = new SimpleSchema({
     optional: true,
     autoform: {
       afFieldInput: {
-        type: "date"
+        //type: "date"
+        type: "bootstrap-datepicker"
       }
     }
   },
@@ -376,7 +377,8 @@ Schemas.Meeting = new SimpleSchema({
   proposed_amount: {
     type: Number,
     label: "提报金额",
-    optional: true
+    optional: true,
+    regEx: /^[0-9]*$/i
   },
   pass_or_not: {
     type: String,
@@ -399,7 +401,7 @@ Schemas.Meeting = new SimpleSchema({
     optional:true,
     autoform: {
       afFieldInput: {
-        type: "date"
+        type: "bootstrap-datepicker"
       }
     }
   },
@@ -416,12 +418,14 @@ Schemas.Meeting = new SimpleSchema({
   pass_invest: {
     type: Number,
     label: "过会投资金额（原币/千元）",
-    optional:true
+    optional:true,
+    regEx: /^[0-9]*$/i
   },
   pass_invest_CNY: {
     type: Number,
     label: "过会投资金额（人民币/千元）",
-    optional: true
+    optional: true,
+    regEx: /^[0-9]*$/i
   },
   proposed_invest_plat: {
     type: String,
@@ -431,12 +435,14 @@ Schemas.Meeting = new SimpleSchema({
   pre_money: {
     type: Number,
     label: "投前估值/原币",
-    optional:true
+    optional:true,
+    regEx: /^[0-9]*$/i
   },
   post_money: {
     type: Number,
     label: "投后估值/原币",
-    optional:true
+    optional:true,
+    regEx: /^[0-9]*$/i
   },
   post_deal_share: {
     type: String,
@@ -463,7 +469,7 @@ Schemas.Meeting = new SimpleSchema({
     optional:true,
     autoform: {
       afFieldInput: {
-        type: "date"
+        type: "bootstrap-datepicker"
       }
     }
   },
@@ -475,7 +481,12 @@ Schemas.Meeting = new SimpleSchema({
   invest_date: {
     type: String,
     label: "出资时间",
-    optional:true
+    optional:true,
+    autoform: {
+      afFieldInput: {
+        type: "bootstrap-datepicker"
+      }
+    }
   },
   invest_plat: {  // = project.invest_entity (L31)
     type: String,
@@ -485,12 +496,14 @@ Schemas.Meeting = new SimpleSchema({
   real_pay: {
     type: Number,
     label: "实际付款（原币/千元）",
-    optional:true
+    optional:true,
+    regEx: /^[0-9]*$/i
   },
   real_pay_CNY: {
     type: Number,
     label: "实际付款（人民币/千元）",
-    optional:true
+    optional:true,
+    regEx: /^[0-9]*$/i
   },
   note_bond: { // = project.note_bond : (L40)
     type: String,

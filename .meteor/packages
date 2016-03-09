@@ -28,3 +28,5 @@ base64
 axw:json2csv
 cfs:standard-packages
 cfs:filesystem
+aldeed:autoform-bs-datepicker
+rajit:bootstrap3-datepicker
