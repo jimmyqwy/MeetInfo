@@ -7,6 +7,20 @@ function pad(n){
 // SYSTEM ENTIRE Json file => fill up the project object
 var json_to_projectObj = function (jsonObj) {
   if (jsonObj) {
+    var country = jsonObj[15] ? jsonObj[15].trim() : "";
+    var perf = jsonObj[16] ? jsonObj[16].trim() : "";
+    var city = jsonObj[17] ? jsonObj[17].trim() : "";
+    var place = country + " " + perf + " " + city;
+
+    var group_count = 1;
+    if (jsonObj[19]) {  // group column
+      if(jsonObj[20]) {// union column
+        var group_length = jsonObj[20].split("&").length;
+        if(group_length) {
+          group_count = 1 + group_length;
+        }
+      }
+    }
     return {
       projectID : jsonObj[1] ? jsonObj[1] : "N/A",
       project_full_name: jsonObj[0] ? jsonObj[0] : "N/A",
@@ -18,11 +32,13 @@ var json_to_projectObj = function (jsonObj) {
       group_product : "N/A",
       union_group : jsonObj[20] ? jsonObj[20] : "N/A",
       consult_group : jsonObj[21] ? jsonObj[21] : "N/A",
-      group_cnt : 1,
+      group_cnt : group_count,
       project_name : jsonObj[2] ? jsonObj[2] : "N/A",
-      target_company : "N/A",
+      target_company : jsonObj[0] ? jsonObj[0] : "N/A",
+      place: place.trim() != "" ? place.trim() : "N/A",
       industry : jsonObj[18] && jsonObj[18].trim() != "" ? jsonObj[18] : "N/A",
       strategy_label: "N/A",
+      proposed_condition: "N/A",
       manage_plat : jsonObj[19] && jsonObj[19].trim() != "" ? jsonObj[19] : "N/A",
       project_manager : jsonObj[22] ? jsonObj[22] : "N/A",
       proposed_amount : 0,
@@ -66,9 +82,9 @@ var InitInvestSystem = function () {
   console.log("Project Counts: " + workbookJson.length);
   // insert json into Meetings Collection without duplication
   for (var i = 0 ; i < workbookJson.length; i++ ) {
-    var meetInstance = json_to_projectObj(workbookJson[i]);
-    if (meetInstance) {
-      Projects.insert(meetInstance);
+    var projectInstance = json_to_projectObj(workbookJson[i]);
+    if (projectInstance) {
+      Projects.insert(projectInstance);
     }
   }
   console.log("Project Collections: " + Projects.find().count());
@@ -108,12 +124,12 @@ var json_to_meetObj = function (jsonObj) {
       if (!title_body)  title_body = "N/A";
       return {
         projectID: "N/A",
-        meeting_type: meet_type ? meet_type : "N/A",
-        meeting_group: meet_group ? meet_group : "N/A",
-        meeting_system: meet_system ? meet_group : "N/A",
-        meeting_organizer: jsonObj[9] ? jsonObj[9] : "N/A", //jsonObj["会议组织者"],
-        meeting_title: title_body ? title_body : "N/A",
-        meeting_date: jsonObj[1] ? jsonObj[1].split('/').map(pad).join('-') : "N/A", //jsonObj["开始日期"],
+        meeting_type: meet_type && meet_type.trim() != "" ? meet_type.trim() : "N/A",
+        meeting_group: meet_group && meet_group.trim() != "" ? meet_group.trim() : "N/A",
+        meeting_system: meet_system && meet_system.trim() != "" ? meet_system.trim() : "N/A",
+        meeting_organizer: jsonObj[9] && jsonObj[9].trim() != "" ? jsonObj[9].trim() : "N/A", //jsonObj["会议组织者"],
+        meeting_title: title_body && title_body.trim() != "" ? title_body.trim() : "N/A",
+        meeting_date: jsonObj[1] ? jsonObj[1].trim().split('/').map(pad).join('-') : "N/A", //jsonObj["开始日期"],
         meeting_result: "N/A",
         meeting_pass: "progress",
         meeting_comment: "N/A"
@@ -176,8 +192,7 @@ var InitMeetings = function(dirInfo, fileInfo) {
     }
   }
   console.log("Meetings: " + Meetings.find().count());
-
-
+  /*
   console.log("Start to Combine...");
   // Combine Meetings and Projects
   Projects.find().forEach(function(project) {
@@ -191,6 +206,7 @@ var InitMeetings = function(dirInfo, fileInfo) {
                     {upsert: false});
   });
   console.log("Done!");
+  */
 }
 
 

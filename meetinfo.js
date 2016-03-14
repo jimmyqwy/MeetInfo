@@ -1,13 +1,13 @@
 
-var Collections = {};
+//var Collections = {};
 
 //EntireData = Collections.EntireData = new Mongo.Collection("Meeting");
 //EntireData.attachSchema(Schemas.Meeting);
-Meetings = Collections.Meetings = new Mongo.Collection("Meeting");
-Meetings.attachSchema(Schemas.Meeting);
+//Meetings = Collections.Meetings = new Mongo.Collection("Meeting");
+//Meetings.attachSchema(Schemas.Meeting);
 
-Projects = Collections.Projects = new Mongo.Collection("Project");
-Projects.attachSchema(Schemas.Project);
+//Projects = Collections.Projects = new Mongo.Collection("Project");
+//Projects.attachSchema(Schemas.Project);
 
 // FS collection uploaded usage
 //var fs = Npm.require('fs');
@@ -27,6 +27,7 @@ if (Meteor.isClient) {
 
   Template.registerHelper("Schemas", Schemas);
   Template.registerHelper("Collections", Collections);
+  Template.registerHelper("TabularTables", { MeetingTable: TabularTables.MeetingTable} );
 
   /*
   Meteor.publish(null, function () {
@@ -57,15 +58,59 @@ if (Meteor.isClient) {
 
   Session.setDefault("searchKeyWord", "");
 
+  ///////////////////////////////////////////////
+  /// Table Templates
+  ///////////////////////////////////////////////
+  Template.passDescription.helpers({
+    passColor: function() {
+      var passStatus = this.meeting_pass;
+      if (passStatus == "pass" ) {
+        return "#5cb85c";
+      } else if ( passStatus == "progress" ) {
+        return "#f0ad4e";
+      } else {
+        return "#d9534f";
+      }
+    },
+
+    passLabel: function() {
+      var passStatus = this.meeting_pass;
+      if (passStatus == "pass" ) {
+        return "是";
+      } else if ( passStatus == "progress" ) {
+        return "跟进";
+      } else {
+        return "否x";
+      }
+    }
+  });
+
+  Template.selectMeeting.events({
+    'click .js-select-meeting': function(event) {
+      Session.set("selectedMeetingID", this._id);
+      $("#meetingUpdate").modal('show');
+    }
+  });
+
+  Template.deleteMeeting.events({
+    'click .js-delete-meeting': function(event) {
+      var meet_id = this._id;
+      Meetings.remove({"_id" : meet_id});
+      //$("tr#" + meet_id).hide('slow', function() {
+
+      //});
+    }
+  });
+
 
   // send data to template
   Template.meetinfo.helpers({
-    searchKeyWord: Session.get('searchKeyWord'),
+    //searchKeyWord: Session.get('searchKeyWord'),
 
     meetings: function () {
       ids = Session.get('MeetingTargetIDs');
       if (ids && ids.length > 0) {
-        return Meetings.find({"_id" : {"$in" : ids}});
+        return Meetings.find({"_id" : {"$in" : ids}}, {sort: {meeting_date : 1}});
       } /*else {
         //return [];
         var ids = [];
@@ -123,8 +168,33 @@ if (Meteor.isClient) {
       */
     },
 
+
+    'click .js-select-meeting': function(event) {
+      //console.log(this._id);
+      //console.log(Meetings.find({"_id": this._id}));
+      Session.set("selectedMeetingID", this._id);
+      $("#meetingUpdate").modal('show');
+    },
+
+    'click .js-delete-meeting': function(event) {
+      var meet_id = this._id;
+      $("tr#" + meet_id).hide('slow', function() {
+        Meetings.remove({"_id" : meet_id});
+      });
+    }
+  });
+
+  /////////////////////////////////////////////
+  // Template meetingOperation search / add button / export button
+  /////////////////////////////////////////////
+  Template.meetingOperation.helpers({
+
+  });
+
+  Template.meetingOperation.events({
     'click .js-search': function(event) {
-      keyWord = Session.get("searchKeyWord");
+      //keyWord = Session.get("searchKeyWord");
+      keyWord = $("#search_text_box").val();
       console.log("Search Key Word: " + keyWord);
       var docs;
       if (!keyWord) {  // return all
@@ -145,42 +215,49 @@ if (Meteor.isClient) {
 
     'change .js-search-text': function(event) {
       //console.log(event.target);
-      Session.set("searchKeyWord", event.target.value);
-    },
-
-    'click .js-select-meeting': function(event) {
-      //console.log(this._id);
-      //console.log(Meetings.find({"_id": this._id}));
-      Session.set("selectedMeetingID", this._id);
-    },
-
-    'click .js-delete-meeting': function(event) {
-      var meet_id = this._id;
-      $("tr#" + meet_id).hide('slow', function() {
-        Meetings.remove({"_id" : meet_id});
-      });
-
-    },
-
-    'click .js-show-meeting-form' : function(event) {
-      $("#meeting_add_form").modal('show');
+      //Session.set("searchKeyWord", event.target.value);
+      $("#search_button").click();
     },
 
     'click #download' : function(event) {
       var csvLabel = [];
-      var exportSchema = Schemas.Meeting.schema();
-      for(var k in exportSchema) {
-        csvLabel.push(exportSchema[k]["label"]);
+      var fullSchema = Schemas.Meeting.schema();
+      var exportSchema = Meteor.myConstants.selectedFields;
+      for (var colIndex = 0 ; colIndex < exportSchema.length; colIndex++ ) {
+        csvLabel.push(fullSchema[exportSchema[colIndex]]["label"]);
       }
+
       if (Meetings.find().count() > 0) {
         Meteor.myFunctions.JSONToCSVConvertor("meetings_export",
-          Meetings.find().fetch(), csvLabel);
+          Meetings.find().fetch(), Meteor.myConstants.selectedFields, csvLabel);
       }
       //csv = json2csv(Meetings.find().fetch(), true, true);
       //event.target.href = "data:text/csv;charset=utf-8,\uFEFF" + encodeURIComponent(csv);
       //event.target.download = "meetings_export.csv";
-    }
+    },
 
+    'click .js-show-meeting-form' : function(event) {
+      console.log("ADD form show");
+      $("#meeting_add_form").modal('show');
+    }
+  });
+
+  /////////////////////////////////////////////
+  // Template add meeting
+  /////////////////////////////////////////////
+  Template.meeting_add_form.helpers({
+    selectedFields: function() {
+      return Meteor.myConstants.selectedFields;
+    }
+  });
+
+  Template.meeting_add_form.events({
+    'click .js-add-meeting': function () {
+      //TODO: Check meeting duplicate
+      //TODO: refresh session
+      console.log("bbb");
+      $('#meeting_add_form').modal('hide');
+    }
   });
 
   /////////////////////////////////////////////
@@ -188,6 +265,9 @@ if (Meteor.isClient) {
   /////////////////////////////////////////////
   Template.meetingUpdate.helpers({
 
+    selectedFields: function() {
+      return Meteor.myConstants.selectedFields;
+    },
     selectedMeetingDoc: function () {
       return Meetings.findOne(Session.get("selectedMeetingID"));
     },
@@ -204,23 +284,17 @@ if (Meteor.isClient) {
     disableButtons: function () {
       return !Session.get("selectedMeetingID");
     }
+
+
   });
 
   Template.meetingUpdate.events({
+    'click .js-update-confirm': function() {
+      $('#meetingUpdate').modal('hide');
+    },
+
     'click .js-update-reset': function () {
       Session.set("selectedMeetingID", 0);
-    },
-  });
-
-  /////////////////////////////////////////////
-  // Template add meeting
-  /////////////////////////////////////////////
-  Template.meeting_add_form.events({
-    'click .js-add-meeting': function () {
-      //TODO: Check meeting duplicate
-      //TODO: refresh session
-      console.log("bbb");
-      $('#meeting_add_form').modal('hide');
     }
   });
 
