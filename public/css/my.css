@@ -51,6 +51,47 @@ label {
     color: #fff;
 }
 
+.progressInner {
+    height: 33px;
+}
+
+.uploadPanel {
+    display: table;
+}
+
+.uploadPanel li {
+    display: table-cell;
+}
+
+.uploadPanel .btn {
+    display: table-cell; width: 1%;
+}
+
+.uploadPanel .upload-control:first-child {
+    border-radius: 5px 0 0 5px;
+}
+
+.uploadPanel .upload-control:last-child {
+    border-radius: 0 5px 5px 0;
+}
+
+.uploadPanel .form-control {
+    border-radius: 0px;
+    padding: 0px;
+    position: relative
+}
+
+.uploadPanel .progress{
+    border-radius: 0px;
+}
+
+.progress-label {
+    position: absolute;
+    width: 100%;
+    top: 6px;
+    text-align: center
+}
+
 /* for glyphicon */
 .grey, .grey a {
   color: #555;

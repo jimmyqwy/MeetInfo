@@ -287,6 +287,7 @@ if (Meteor.isServer) {
       */
 
       finished: function(fileInfo, formFields) {
+        console.log("Initial Uploaded Meetings");
         InitMeetings("uploads", fileInfo);
       }
     });

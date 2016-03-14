@@ -4,6 +4,8 @@
     <!--<link href="css/bootstrap.min.css" rel="stylesheet">-->
     <link href="css/svg.css" rel="stylesheet">
     <link href="css/my.css" rel="stylesheet">
+    <link href="css/upload/jquery.fileupload.css" rel="stylesheet">
+
     <!--<script src="js/jquery-1.11.2.min.js"></script>-->
     <!--<script src="js/bootstrap.min.js"></script>-->
     <script type="text/javascript" src="js/angular.min.js"></script>
@@ -15,6 +17,13 @@
     <link href="lib/datepicker/jquery.datepick.css" rel="stylesheet">
     <script src="lib/datepicker/jquery.plugin.js"></script>
     <script src="lib/datepicker/jquery.datepick.js"></script>
+
+    <!--[if lt IE 10]>
+    <script src="js/upload/cors/jquery.xdr-transport.js"></script>
+    <![endif]-->
+    <script src="js/upload/vendor/jquery.ui.widget.js"></script>
+    <script src="js/upload/jquery.iframe-transport.js"></script>
+    <script src="js/upload/jquery.fileupload.js"></script>
 
     <!-- <script type="text/javascript" src="/javascripts/angularApp.js"></script> -->
     <!-- <script type="text/javascript" src="/javascripts/lifedirectives.js"></script> -->
@@ -84,6 +93,45 @@
         <h2> ~ Meeting Info ~ </h2>
       </div>
     </div>
+
+<!--
+    <form action="upload/"
+          method="POST"
+          enctype="multipart/form-data">
+
+      <div class="uploadPanel">
+        <span class="btn btn-success fileinput-button form-control upload-control">
+            <i class="glyphicon glyphicon-plus"></i>
+            <span>Upload File...</span>
+            <input id="fileupload" type="file" name="files[]"
+                   class="js-schedule-upload">
+        </span>
+
+        <div class="form-control">
+            <div class="progressInner">
+              <div id="progress" class="progress progressInner upload-control">
+                <div class="progress-bar progress-bar-success progress-bar-striped"></div>
+              </div>
+            </div>
+        </div>
+      </div>
+    </form>
+-->
+
+    <!--
+    <span class="btn btn-success fileinput-button">
+        <i class="glyphicon glyphicon-plus"></i>
+        <span>Upload File...</span>
+        <input id="fileupload" class="js-schedule-upload"
+               type="file" name="files[]"
+               data-url="upload/" multiple>
+    </span>
+    -->
+
+    <div id="upload_errors">
+
+    </div>
+
 <!--    <div class="row">
       <div class="col-xs-12 col-md-12 vcenter">
         {{> upload_bootstrap
