@@ -59,6 +59,129 @@ if (Meteor.isClient) {
   Session.setDefault("searchKeyWord", "");
 
   ///////////////////////////////////////////////
+  /// Uploader
+  ///////////////////////////////////////////////
+  Template.meetingUploader.events({
+    'click .js-schedule-upload': function(event, template) {
+      console.log("Click upload");
+      $('#report_progress .progress-bar').css('width', 0 + '%');
+      $('#schedule_upload').fileupload({
+        dataType: 'json',
+        autoUpload: true,
+        acceptFileTypes: /(\.|\/)(xlsx)$/i
+        /*done: function (e, data) {
+          var errors = data.result.Errors;
+          if (errors && errors.length) {
+              var items = $.map(errors, function (i, error) {
+                  return $("<li>").text(error);
+              });
+              $("<ul>").append(items).appendTo('#upload_errors');
+          } else {
+            $.each(data.result.files, function (index, file) {
+                //('<p/>').text(file.name).appendTo(document.body);
+                console.log(file.name);
+            });
+          }
+        }*/
+      }).on('fileuploadprogressall', function (e, data) {
+        var progress = parseInt(data.loaded / data.total * 100, 10);
+        $('#schedule_progress .progress-bar').css(
+            'width',
+            progress + '%'
+        );
+      }).on('fileuploaddone', function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            console.log(file.name);
+              /*if (file.url) {
+                  var link = $('<a>')
+                      .attr('target', '_blank')
+                      .prop('href', file.url);
+                  $(data.context.children()[index])
+                      .wrap(link);
+              } else if (file.error) {
+                  var error = $('<span class="text-danger"/>').text(file.error);
+                  $(data.context.children()[index])
+                      .append('<br>')
+                      .append(error);
+              }*/
+          });
+      }).on('fileuploadfail', function (e, data) {
+          $.each(data.files, function (index) {
+              var error = $('<span class="text-danger"/>').text('File upload failed.');
+              $(data.context.children()[index])
+                  .append('<br>')
+                  .append(error);
+          });
+      });
+      /*
+      var files = event.target.files;
+      console.log(files);
+      for (var i = 0, ln = files.length; i < ln; i++) {
+        Schedules.insert(files[i], function (err, fileObj) {
+          // Inserted new doc with ID fileObj._id, and kicked off the data upload using HTTP
+        });
+      }
+      FS.Utility.eachFile(event, function(file) {
+        console.log(file);
+        Schedules.insert(file, function (err, fileObj) {
+          //If !err, we have inserted new doc with ID fileObj._id, and
+          //kicked off the data upload using HTTP
+          console.log(fileObj._id);
+        });
+      });
+      */
+    },
+
+    'click .js-report-upload': function(event, template) {
+      console.log("Click report upload");
+      $('#report_progress .progress-bar').css('width', 0 + '%');
+      $('#report_upload').fileupload({
+        dataType: 'json',
+        autoUpload: true,
+        acceptFileTypes: /(\.|\/)(xlsx)$/i
+      }).on('fileuploadprogressall', function (e, data) {
+        var progress = parseInt(data.loaded / data.total * 100, 10);
+        $('#report_progress .progress-bar').css(
+            'width',
+            progress + '%'
+        );
+      }).on('fileuploaddone', function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            console.log(file.name);
+          });
+      }).on('fileuploadfail', function (e, data) {
+          $.each(data.files, function (index) {
+              var error = $('<span class="text-danger"/>').text('File upload failed. xlsx ONLY');
+              error.appendTo('#upload_errors');
+              $('#report_progress .progress-bar').css('width', 0 + '%');
+              //var items = $("<li>").text(error);
+              //$("<ul>").append(items).appendTo('#upload_errors');
+              //$(data.context.children()[index])
+              //    .append('<br>')
+              //    .append(error);
+          });
+      });
+      /*
+      var files = event.target.files;
+      console.log(files);
+      for (var i = 0, ln = files.length; i < ln; i++) {
+        Schedules.insert(files[i], function (err, fileObj) {
+          // Inserted new doc with ID fileObj._id, and kicked off the data upload using HTTP
+        });
+      }
+      FS.Utility.eachFile(event, function(file) {
+        console.log(file);
+        Schedules.insert(file, function (err, fileObj) {
+          //If !err, we have inserted new doc with ID fileObj._id, and
+          //kicked off the data upload using HTTP
+          console.log(fileObj._id);
+        });
+      });
+      */
+    }
+  });
+
+  ///////////////////////////////////////////////
   /// Table Templates
   ///////////////////////////////////////////////
   Template.passDescription.helpers({
@@ -146,78 +269,6 @@ if (Meteor.isClient) {
 
   // events
   Template.meetinfo.events({
-
-    // upload
-    'click .js-schedule-upload': function(event, template) {
-      console.log("Click upload");
-      $('#fileupload').fileupload({
-        dataType: 'json',
-        autoUpload: true,
-        acceptFileTypes: /(\.|\/)(xlsx)$/i
-        /*done: function (e, data) {
-          var errors = data.result.Errors;
-          if (errors && errors.length) {
-              var items = $.map(errors, function (i, error) {
-                  return $("<li>").text(error);
-              });
-              $("<ul>").append(items).appendTo('#upload_errors');
-          } else {
-            $.each(data.result.files, function (index, file) {
-                //('<p/>').text(file.name).appendTo(document.body);
-                console.log(file.name);
-            });
-          }
-        }*/
-      }).on('fileuploadprogressall', function (e, data) {
-        var progress = parseInt(data.loaded / data.total * 100, 10);
-        $('#progress .progress-bar').css(
-            'width',
-            progress + '%'
-        );
-      }).on('fileuploaddone', function (e, data) {
-          $.each(data.result.files, function (index, file) {
-            console.log(file.name);
-              /*if (file.url) {
-                  var link = $('<a>')
-                      .attr('target', '_blank')
-                      .prop('href', file.url);
-                  $(data.context.children()[index])
-                      .wrap(link);
-              } else if (file.error) {
-                  var error = $('<span class="text-danger"/>').text(file.error);
-                  $(data.context.children()[index])
-                      .append('<br>')
-                      .append(error);
-              }*/
-          });
-      }).on('fileuploadfail', function (e, data) {
-          $.each(data.files, function (index) {
-              var error = $('<span class="text-danger"/>').text('File upload failed.');
-              $(data.context.children()[index])
-                  .append('<br>')
-                  .append(error);
-          });
-      });
-      /*
-      var files = event.target.files;
-      console.log(files);
-      for (var i = 0, ln = files.length; i < ln; i++) {
-        Schedules.insert(files[i], function (err, fileObj) {
-          // Inserted new doc with ID fileObj._id, and kicked off the data upload using HTTP
-        });
-      }
-      FS.Utility.eachFile(event, function(file) {
-        console.log(file);
-        Schedules.insert(file, function (err, fileObj) {
-          //If !err, we have inserted new doc with ID fileObj._id, and
-          //kicked off the data upload using HTTP
-          console.log(fileObj._id);
-        });
-      });
-      */
-    },
-
-
     'click .js-select-meeting': function(event) {
       //console.log(this._id);
       //console.log(Meetings.find({"_id": this._id}));
