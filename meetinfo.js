@@ -42,29 +42,32 @@ var UploaderProcessor = function (uploaderName, uploaderID, progressID) {
     var progress = parseInt(data.loaded / data.total * 100, 10);
     $('#' + progressID + ' .progress-bar').css('width',progress + '%');
   }).on('fileuploaddone', function (e, data) {
-    console.log("done data")
-    console.log(data);
-    console.log("done e: " );
-    console.log(e);
-      //$.each(data.result.files, function (index, file) {
-      //  console.log(file.name);
-      //});
-  }).on('fileuploadfail', function (e, data) {
-    console.log("fail")
-    console.log(e);
-    console.log(data);
-    console.log(data.files);
-      $.each(data.files, function (index) {
-          var error = $('<span class="text-danger"/>').text('[' + uploaderName + '] File upload failed. xlsx ONLY');
-          $('#upload_errors .text-danger').remove();
-          error.append('<br>').appendTo('#upload_errors');
-          $('#' + progressID + ' .progress-bar').css('width', 0 + '%');
-          //var items = $("<li>").text(error);
-          //$("<ul>").append(items).appendTo('#upload_errors');
-          //$(data.context.children()[index])
-          //    .append('<br>')
-          //    .append(error);
+    if (data.result) {
+      $.each(data.result.files, function (index, file) {
+        console.log(file.name);
       });
+    } else {
+      var error = $('<span class="text-danger"/>').text('[' + uploaderName + '] File upload failed. xlsx ONLY');
+      $('#upload_errors .text-danger').remove();
+      error.append('<br>').appendTo('#upload_errors');
+      $('#' + progressID + ' .progress-bar').css('width', 0 + '%');
+    }
+  }).on('fileuploadfail', function (e, data) {
+    console.log(data);
+    $.each(data.files, function (index) {
+      var errorMessage = '[' + uploaderName + '] File upload failed. ';
+      var responseText = data.jqXHR ? data.jqXHR.responseText : "";
+      errorMessage = errorMessage + responseText;
+      var error = $('<span class="text-danger"/>').text(errorMessage);
+      $('#upload_errors .text-danger').remove();
+      error.append('<br>').appendTo('#upload_errors');
+      $('#' + progressID + ' .progress-bar').css('width', 0 + '%');
+      //var items = $("<li>").text(error);
+      //$("<ul>").append(items).appendTo('#upload_errors');
+      //$(data.context.children()[index])
+      //    .append('<br>')
+      //    .append(error);
+    });
   });
 }
 /////////////////////////////////////////////////////////////////////////
@@ -332,8 +335,22 @@ if (Meteor.isClient) {
     }
   });
 
-  /////////////////////////////////////////////////////////////////////////
-
+  /////////////////////////////////////////////
+  // Template Dashboard
+  /////////////////////////////////////////////
+  Template.meetingDashboard.onRendered(function() {
+    this.$('.input-daterange').datepicker({
+        format: "yyyy-mm-dd",
+        language: "zh-CN"
+    });
+  });
+  Template.meetingDashboard.events({
+    'click .js-dash-cal': function() {
+      var startDate = $('#dashboard_datepicker .range_start').data('date');
+      var endDate = $('#dashboard_datepicker .range_end').data('date');
+      //Meetings.
+    }
+  });
 }
 
 

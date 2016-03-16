@@ -60,6 +60,10 @@
     <div class="container">
       {{> meetingUploader}}
     </div>
+
+    <div class="container">
+      {{> meetingDashboard}}
+    </div>
 </body>
 
 <template name="meetingOperation">
@@ -198,6 +202,8 @@
 </template>
 
 <template name="meetingUploader">
+  <div id="upload_errors"></div>
+  <br>
   {{> uploader upload_describe="上传Outlook会议日程..."
                upload_id="schedule_upload"
                upload_class="js-schedule-upload"
@@ -213,7 +219,6 @@
                upload_class="js-report-upload"
                progress_id="report_progress"}}
   <br>
-  <div id="upload_errors"></div>
 </template>
 
 <template name="uploader">
@@ -238,4 +243,29 @@
       </div>
     </div>
   </form>
+</template>
+
+<template name="meetingDashboard">
+  <div class="page-header">
+    <div class="row">
+    <!--<div class="col-xs-10  col-xs-offset-1 col-md-10 col-md-offset-1">-->
+      <div class="col-xs-5 col-md-5 col-lg-5 vcenter">
+        <h2> ~ Dashboard ~ </h2>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-8 col-md-8 col-lg-8 vcenter">
+      <div class="input-daterange input-group" id="dashboard_datepicker">
+          <input type="text" class="input-sm form-control range_start" name="start" />
+          <span class="input-group-addon">to</span>
+          <input type="text" class="input-sm form-control range_end" name="end" />
+      </div>
+    </div>
+    <div class="col-xs-2 col-md-2 col-lg-2 vcenter">
+      <button id="calculate" class="js-dash-cal btn btn-success" type="button">
+        Calculate
+      </button>
+    </div>
+  </div>
 </template>
