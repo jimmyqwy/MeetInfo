@@ -20,6 +20,53 @@
 //  stores: [new FS.Store.FileSystem("schedule", {path: basepath + "uploads/"})]
 //});
 
+var UploaderProcessor = function (uploaderName, uploaderID, progressID) {
+  console.log("Click " + uploaderName);
+  // clean progress bar
+  $('#' + progressID + ' .progress-bar').css('width', 0 + '%');
+  // clean error information
+  $('#upload_errors .text-danger').remove();
+
+  // start to upload
+  console.log('#' + uploaderID);
+  $('#' + uploaderID).fileupload({
+    dataType: 'json',
+    autoUpload: true,
+    formData: {uploadType: uploaderID},
+    acceptFileTypes: /(\.|\/)(xlsx)$/i,
+    always: function(e, data) {
+      console.log("always")
+      console.log(data);
+    }
+  }).on('fileuploadprogressall', function (e, data) {
+    var progress = parseInt(data.loaded / data.total * 100, 10);
+    $('#' + progressID + ' .progress-bar').css('width',progress + '%');
+  }).on('fileuploaddone', function (e, data) {
+    console.log("done data")
+    console.log(data);
+    console.log("done e: " );
+    console.log(e);
+      //$.each(data.result.files, function (index, file) {
+      //  console.log(file.name);
+      //});
+  }).on('fileuploadfail', function (e, data) {
+    console.log("fail")
+    console.log(e);
+    console.log(data);
+    console.log(data.files);
+      $.each(data.files, function (index) {
+          var error = $('<span class="text-danger"/>').text('[' + uploaderName + '] File upload failed. xlsx ONLY');
+          $('#upload_errors .text-danger').remove();
+          error.append('<br>').appendTo('#upload_errors');
+          $('#' + progressID + ' .progress-bar').css('width', 0 + '%');
+          //var items = $("<li>").text(error);
+          //$("<ul>").append(items).appendTo('#upload_errors');
+          //$(data.context.children()[index])
+          //    .append('<br>')
+          //    .append(error);
+      });
+  });
+}
 /////////////////////////////////////////////////////////////////////////
 // Client site
 /////////////////////////////////////////////////////////////////////////
@@ -43,11 +90,6 @@ if (Meteor.isClient) {
     }
   });
 
-  /////////////
-  // Uploader
-  Uploader.localisation = {
-    browse: "Upload Outlook Schedule"
-  };
 
   //meetingBackEndIds = new Mongo.Collection('meetingIDs');
   //Meteor.subscribe("meetingsBackEnd");
@@ -63,121 +105,13 @@ if (Meteor.isClient) {
   ///////////////////////////////////////////////
   Template.meetingUploader.events({
     'click .js-schedule-upload': function(event, template) {
-      console.log("Click upload");
-      $('#report_progress .progress-bar').css('width', 0 + '%');
-      $('#schedule_upload').fileupload({
-        dataType: 'json',
-        autoUpload: true,
-        acceptFileTypes: /(\.|\/)(xlsx)$/i
-        /*done: function (e, data) {
-          var errors = data.result.Errors;
-          if (errors && errors.length) {
-              var items = $.map(errors, function (i, error) {
-                  return $("<li>").text(error);
-              });
-              $("<ul>").append(items).appendTo('#upload_errors');
-          } else {
-            $.each(data.result.files, function (index, file) {
-                //('<p/>').text(file.name).appendTo(document.body);
-                console.log(file.name);
-            });
-          }
-        }*/
-      }).on('fileuploadprogressall', function (e, data) {
-        var progress = parseInt(data.loaded / data.total * 100, 10);
-        $('#schedule_progress .progress-bar').css(
-            'width',
-            progress + '%'
-        );
-      }).on('fileuploaddone', function (e, data) {
-          $.each(data.result.files, function (index, file) {
-            console.log(file.name);
-              /*if (file.url) {
-                  var link = $('<a>')
-                      .attr('target', '_blank')
-                      .prop('href', file.url);
-                  $(data.context.children()[index])
-                      .wrap(link);
-              } else if (file.error) {
-                  var error = $('<span class="text-danger"/>').text(file.error);
-                  $(data.context.children()[index])
-                      .append('<br>')
-                      .append(error);
-              }*/
-          });
-      }).on('fileuploadfail', function (e, data) {
-          $.each(data.files, function (index) {
-              var error = $('<span class="text-danger"/>').text('File upload failed.');
-              $(data.context.children()[index])
-                  .append('<br>')
-                  .append(error);
-          });
-      });
-      /*
-      var files = event.target.files;
-      console.log(files);
-      for (var i = 0, ln = files.length; i < ln; i++) {
-        Schedules.insert(files[i], function (err, fileObj) {
-          // Inserted new doc with ID fileObj._id, and kicked off the data upload using HTTP
-        });
-      }
-      FS.Utility.eachFile(event, function(file) {
-        console.log(file);
-        Schedules.insert(file, function (err, fileObj) {
-          //If !err, we have inserted new doc with ID fileObj._id, and
-          //kicked off the data upload using HTTP
-          console.log(fileObj._id);
-        });
-      });
-      */
+      UploaderProcessor("Outlook Schedule Uploader", "schedule_upload", "schedule_progress");
     },
-
+    'click .js-invest-upload': function(event, template) {
+      UploaderProcessor("Outlook Investment Project Uploader", "invest_upload", "invest_progress");
+    },
     'click .js-report-upload': function(event, template) {
-      console.log("Click report upload");
-      $('#report_progress .progress-bar').css('width', 0 + '%');
-      $('#report_upload').fileupload({
-        dataType: 'json',
-        autoUpload: true,
-        acceptFileTypes: /(\.|\/)(xlsx)$/i
-      }).on('fileuploadprogressall', function (e, data) {
-        var progress = parseInt(data.loaded / data.total * 100, 10);
-        $('#report_progress .progress-bar').css(
-            'width',
-            progress + '%'
-        );
-      }).on('fileuploaddone', function (e, data) {
-          $.each(data.result.files, function (index, file) {
-            console.log(file.name);
-          });
-      }).on('fileuploadfail', function (e, data) {
-          $.each(data.files, function (index) {
-              var error = $('<span class="text-danger"/>').text('File upload failed. xlsx ONLY');
-              error.appendTo('#upload_errors');
-              $('#report_progress .progress-bar').css('width', 0 + '%');
-              //var items = $("<li>").text(error);
-              //$("<ul>").append(items).appendTo('#upload_errors');
-              //$(data.context.children()[index])
-              //    .append('<br>')
-              //    .append(error);
-          });
-      });
-      /*
-      var files = event.target.files;
-      console.log(files);
-      for (var i = 0, ln = files.length; i < ln; i++) {
-        Schedules.insert(files[i], function (err, fileObj) {
-          // Inserted new doc with ID fileObj._id, and kicked off the data upload using HTTP
-        });
-      }
-      FS.Utility.eachFile(event, function(file) {
-        console.log(file);
-        Schedules.insert(file, function (err, fileObj) {
-          //If !err, we have inserted new doc with ID fileObj._id, and
-          //kicked off the data upload using HTTP
-          console.log(fileObj._id);
-        });
-      });
-      */
+      UploaderProcessor("Report Uploader", "report_upload", "report_progress");
     }
   });
 

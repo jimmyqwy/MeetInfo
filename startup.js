@@ -255,12 +255,58 @@ if (Meteor.isServer) {
     // TODO: TEMP Solution
     InitMeetings("private", {name: "Meeting.xlsx"});
 
+    // outlook schedule uploader (OutlookSchedule schema)
     UploadServer.init({
+      uploadUrl: "/upload/",
       tmpDir: tempDir,
       uploadDir: baseDir,
       checkCreateDirectories: true,  // create the directories for you
       overwrite: true,
 
+      validateRequest: function(req) { // valid BEFORE it starts uploading
+        if (req.headers["content-length"] > 50000000) {
+            return "File is too large!";
+        }
+        return null;
+      },
+      validateFile: function(file, req) { // validate the integrity of uploaded file AFTER it was uploaded
+        console.log("Validating " + file.name);
+        var splits = file.name.split(".");
+        if (splits && splits.length && splits.length >= 2) {
+          surfix = splits[1];
+          if (surfix != "xlsx") {
+            return "Support XLSX file ONLY!";
+          }
+        } else {
+          return "Not Valid File!";
+        }
+        return null;
+      },
+
+      finished: function(fileInfo, formFields) {
+        console.log(fileInfo);
+        var uploadType = formFields['uploadType'];
+        if (uploadType == 'schedule_upload') {
+          console.log("Adding New Outlook Schedule...");
+          // InitMeetings("uploads", fileInfo);
+        } else if (uploadType == 'invest_upload') {
+          console.log("Adding New Investment Project Information...");
+        } else if (uploadType == 'report_upload') {
+          console.log("Cover Report Data(total)...");
+        } else {
+          console.log("Unknown Upload controller");
+
+        }
+      }
+    });
+  }); // startup server function
+
+}
+
+
+
+////////////////////////////////////////////////////
+// back up uploader getDirectory and getFileName
       /*
       getDirectory: function (fileInfo, formData) {
         console.log(formData);
@@ -285,13 +331,3 @@ if (Meteor.isServer) {
         return fileName;
       },
       */
-
-      finished: function(fileInfo, formFields) {
-        console.log("Initial Uploaded Meetings");
-        InitMeetings("uploads", fileInfo);
-      }
-    });
-
-  }); // startup server function
-
-}
