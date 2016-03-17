@@ -31,3 +31,4 @@ cfs:filesystem
 aldeed:autoform-bs-datepicker
 rajit:bootstrap3-datepicker
 aldeed:tabular
+monbro:mongodb-mapreduce-aggregation

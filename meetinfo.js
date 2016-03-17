@@ -20,6 +20,9 @@
 //  stores: [new FS.Store.FileSystem("schedule", {path: basepath + "uploads/"})]
 //});
 
+//TEMP
+Dashboard = new Mongo.Collection("Dashboard");
+
 var UploaderProcessor = function (uploaderName, uploaderID, progressID) {
   console.log("Click " + uploaderName);
   // clean progress bar
@@ -346,9 +349,13 @@ if (Meteor.isClient) {
   });
   Template.meetingDashboard.events({
     'click .js-dash-cal': function() {
-      var startDate = $('#dashboard_datepicker .range_start').data('date');
-      var endDate = $('#dashboard_datepicker .range_end').data('date');
-      //Meetings.
+      //console.log($('#dashboard_datepicker .range_start'));
+      var startDate = $('#dashboard_datepicker .range_start').val();
+      var endDate = $('#dashboard_datepicker .range_end').val();
+      Meteor.call("meetingReport", startDate, endDate, function (error, result) {
+        console.log(error);
+        console.log(result);
+      });
     }
   });
 }
@@ -356,6 +363,49 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
 
+  Meteor.methods({
+
+    meetingReport: function(startDate, endDate) {
+      console.log(startDate);
+      console.log(endDate);
+      var result = Meetings.mapReduce(
+        function() {  // map
+          var key = this.projectID;
+          var value = {
+                        count: 1,
+                        proposed_amount: this.proposed_amount,
+                        pass_or_not : this.pass_or_not ,
+                        pass_invest: this.pass_invest,
+                        pass_invest_CNY : this.pass_invest_CNY ,
+                        invest_or_not: this.invest_or_not,
+                        real_pay: this.real_pay,
+                        real_pay_CNY: this.real_pay_CNY,
+                      };
+          emit(key, value);
+        },
+        function(key, values) {  // reduce
+          reducedVal = { count: 0 };
+          for (var idx = 0; idx < values.length; idx++) {
+            proposed_amount = values[idx].proposed_amount;
+            if (proposed_amount && proposed_amount > 0) {
+              reducedVal.count += values[idx].count;
+            }
+          }
+          return reducedVal;
+        },
+        {
+          out: "Dashboard",
+          //sort: meeting_date,
+          query:  {meeting_date: {'$gt':startDate, '$lt': endDate}},
+          verbose: true
+        }
+      );
+      //console.log(result);
+      //console.log(Dashboard.find());
+      return Dashboard.find().fetch();
+    }
+
+  });
 /*
   // FS collection uploaded usage
   var fs = Npm.require('fs');
