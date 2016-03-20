@@ -132,6 +132,12 @@ Schemas.Project = new SimpleSchema({
     optional: true,
     regEx: /^[0-9]*$/i
   },
+  proposed_amount_CNY: {
+    type: Number,
+    label: "提报金额（人名币/千元）",
+    optional: true,
+    regEx: /^[0-9]*$/i
+  },
   pass_or_not: {
     type: String,
     label: "是否过会",
@@ -369,6 +375,53 @@ Schemas.OutlookSchedule = new SimpleSchema({
 /////////////////////////////////////////////////////////////////////
 Schemas.Meeting = new SimpleSchema([Schemas.OutlookSchedule, Schemas.Project]);
 
+
+//////////////////////////////////////////////////////////////////////
+// Dashboard group metrics schema
+//////////////////////////////////////////////////////////////////////
+Schemas.GroupDashBoard = new SimpleSchema({
+  group : {
+    type: String,
+    label: "团队",
+    optional:true
+  },
+  project_type: {
+    type: String,
+    label: "项目类型",
+    optional: true
+  },
+  proposed_share: {
+    type: String,
+    label: "提报投决金额总计",
+    optional:true
+  },
+  pass_share: {
+    type: String,
+    label: "过会金额总计",
+    optional:true
+  },
+  invest_share: {
+    type: String,
+    label: "出资金额总计",
+    optional:true
+  },
+  proposed_share_neg: {
+    type: String,
+    label: "提报投决（退出）金额总计",
+    optional:true
+  },
+  pass_share_neg: {
+    type: String,
+    label: "过会（退出）金额总计",
+    optional:true
+  },
+  invest_share_neg: {
+    type: String,
+    label: "出资（退出）金额总计",
+    optional:true
+  }
+});
+
 /////////////////////////////////////////////////////////////////////
 ///// Collections
 /////////////////////////////////////////////////////////////////////
@@ -379,6 +432,9 @@ Meetings.attachSchema(Schemas.Meeting);
 
 Projects = Collections.Projects = new Mongo.Collection("Project");
 Projects.attachSchema(Schemas.Project);
+
+GroupDashBoard = Collections.GroupDashBoard = new Mongo.Collection("GroupDashBoard");
+GroupDashBoard.attachSchema(Schemas.GroupDashBoard);
 
 /////////////////////////////////////////////////////////////////////
 ///// Table to show the list of meetings
@@ -409,5 +465,21 @@ TabularTables.MeetingTable = new Tabular.Table({
       width: "5%",
       tmpl: Meteor.isClient && Template.deleteMeeting
     }
+  ]
+});
+
+TabularTables.GroupDashBoardTable = new Tabular.Table({
+  name: "GroupDashBoard",
+  collection: Collections.GroupDashBoard,
+  stateSave: true,
+  columns: [
+    {data: "group", title: "团队", width: "25%"},
+    {data: "project_type", title: "项目类型", width: "15%"},
+    {data: "proposed_share", title: "提报投决金额总计", width: "10%"},
+    {data: "pass_share", title: "过会金额总计", width: "10%"},
+    {data: "invest_share", title: "出资金额总计", width: "10%"},
+    {data: "proposed_share_neg", title: "提报投决（退出）金额总计", width: "10%"},
+    {data: "pass_share_neg", title: "过会（退出）金额总计", width: "10%"},
+    {data: "invest_share_neg", title: "出资（退出）金额总计", width: "10%"}
   ]
 });

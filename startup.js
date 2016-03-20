@@ -42,6 +42,7 @@ var json_to_projectObj = function (jsonObj) {
       manage_plat : jsonObj[19] && jsonObj[19].trim() != "" ? jsonObj[19] : "N/A",
       project_manager : jsonObj[22] ? jsonObj[22] : "N/A",
       proposed_amount : 0,
+      proposed_amount_CNY: 0,
       pass_or_not : "progress",
       pass_date : "N/A",
       pass_condition : "N/A",
@@ -210,6 +211,47 @@ var InitMeetings = function(dirInfo, fileInfo) {
 }
 
 
+///////////////////////////////////
+// Generate entire Report Meeting
+// (Schedule+Project combined)
+// Field List Meteor.myConstants.selectedFields
+///////////////////////////////////
+var json_to_reportObj = function (jsonObj) {
+  var instance = {};
+  if (jsonObj) {
+    var headers = Meteor.myConstants.selectedFields;
+    for (var index = 0 ; index < headers.length; index++) {
+      instance[headers[index]] = jsonObj[index];
+    }
+  }
+  return instance;
+};
+
+var ReCreateMeetingCollection = function (fileName) {
+  console.log("Importing Entire Meeting xlsx...");
+  var fs = Npm.require('fs');
+  var path = Npm.require('path');
+  var basepath = path.resolve('.').split('.meteor')[0];
+  var excel = new Excel('xlsx');
+  var workbook = excel.readFile(basepath + "uploads\\" + fileName);
+  var sheetName = workbook.SheetNames;
+  var sheet = workbook.Sheets[workbook.SheetNames[0]];
+  var options = { header : 1 }
+  // Generate the JSON
+  var workbookJson = excel.utils.sheet_to_json( sheet, options );
+
+  console.log("Meeting Counts: " + workbookJson.length);
+  // insert json into Meetings Collection without duplication
+  for (var i = 0 ; i < workbookJson.length; i++ ) {
+    var meetingInstance = json_to_reportObj(workbookJson[i]);
+    if (meetingInstance) {
+      Meetings.insert(meetingInstance);
+    }
+  }
+  console.log("Meeting Collections Imported: " + Meetings.find().count());
+};
+
+
 ////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////
 // TODO: move to /client/init.js
@@ -233,6 +275,7 @@ if (Meteor.isServer) {
     // TODO: need comment out the following two statements.
     //Meetings.remove({});
     //Projects.remove({});
+    GroupDashBoard.remove({});
 
     // get data from system database
     console.log("Project #:" + Projects.find().count());
@@ -273,7 +316,7 @@ if (Meteor.isServer) {
         console.log("Validating " + file.name);
         var splits = file.name.split(".");
         if (splits && splits.length && splits.length >= 2) {
-          surfix = splits[1];
+          surfix = splits[splits.length - 1];
           if (surfix != "xlsx") {
             return "Support XLSX file ONLY!";
           }
@@ -293,9 +336,10 @@ if (Meteor.isServer) {
           console.log("Adding New Investment Project Information...");
         } else if (uploadType == 'report_upload') {
           console.log("Cover Report Data(total)...");
+          Meetings.remove({});
+          ReCreateMeetingCollection(fileInfo.name);
         } else {
           console.log("Unknown Upload controller");
-
         }
       }
     });
