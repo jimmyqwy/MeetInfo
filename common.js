@@ -427,12 +427,19 @@ Schemas.GroupDashBoard = new SimpleSchema({
 /////////////////////////////////////////////////////////////////////
 //var Collections = {};
 
-Meetings = Collections.Meetings = new Mongo.Collection("Meeting");
-Meetings.attachSchema(Schemas.Meeting);
+// Outlook schedule
+OutlookSchedule = Collections.OutlookSchedule = new Mongo.Collection("OutlookSchedule");
+OutlookSchedule.attachSchema(Schemas.OutlookSchedule);
 
+// PROJECT with ProjectID
 Projects = Collections.Projects = new Mongo.Collection("Project");
 Projects.attachSchema(Schemas.Project);
 
+// FULL
+Meetings = Collections.Meetings = new Mongo.Collection("Meeting");
+Meetings.attachSchema(Schemas.Meeting);
+
+// for Dashboard (by group)
 GroupDashBoard = Collections.GroupDashBoard = new Mongo.Collection("GroupDashBoard");
 GroupDashBoard.attachSchema(Schemas.GroupDashBoard);
 

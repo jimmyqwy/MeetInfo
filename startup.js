@@ -92,8 +92,11 @@ var InitInvestSystem = function () {
 };
 
 
+///////////////////////////////////
+// Upload Outlook Schedule
+///////////////////////////////////
 // OUTLOOK file logic related.
-var json_to_meetObj = function (jsonObj) {
+var json_to_scheduleObj = function (jsonObj) {
   if (jsonObj) {
     var meet_title = jsonObj[0];//jsonObj["主题"];
     var separateLeftBrace = meet_title.indexOf("【");
@@ -139,15 +142,14 @@ var json_to_meetObj = function (jsonObj) {
   }
 };
 
-var fillUpProjectInfo = function(projectInfo) {
-  resultJson = {};
+var fillUpProjectInfo = function(origin, projectInfo) {
   for(var k in Schemas.Project.schema()) {
-    resultJson[k] = projectInfo[k];
+    origin.k = projectInfo[k];
   }
-  return resultJson;
+  return origin;
 };
 
-var InitMeetings = function(dirInfo, fileInfo) {
+var InitOutlookSchedule = function(dirInfo, fileInfo) {
   //console.log(formFields);
   var fs = Npm.require('fs');
   var path = Npm.require('path');
@@ -165,49 +167,45 @@ var InitMeetings = function(dirInfo, fileInfo) {
   console.log("OutlookRecords: " + workbookJson.length);
   // insert json into Meetings Collection without duplication
   for (var i = 0 ; i < workbookJson.length; i++ ) {
-    var meetInstance = json_to_meetObj(workbookJson[i]);
-    if (meetInstance) {
+    var scheduleInstance = json_to_scheduleObj(workbookJson[i]);
+    if (scheduleInstance) {
       var found;
-      if (meetInstance["title"] != " ") {
-        found = Meetings.find({
-          "meeting_title": meetInstance["meeting_title"],
-          "meeting_type": meetInstance["meeting_type"],
-          "meeting_date": meetInstance["meeting_date"]});
+      if (scheduleInstance["title"] != " ") {
+        found = OutlookSchedule.find({
+          "meeting_title": scheduleInstance["meeting_title"],
+          "meeting_type": scheduleInstance["meeting_type"],
+          "meeting_date": scheduleInstance["meeting_date"]});
       } else {
-        found = Meetings.find({
-          "meeting_type": meetInstance["meeting_type"],
-          "meeting_date": meetInstance["meeting_date"]});
+        found = OutlookSchedule.find({
+          "meeting_type": scheduleInstance["meeting_type"],
+          "meeting_date": scheduleInstance["meeting_date"]});
       }
 
       if (found.count() <= 0) {
-        Meetings.insert(meetInstance);
-        //console.log(meetInstance["meeting_date"]);
-        //console.log(meetInstance["meeting_group"]);
-        //console.log(meetInstance["meeting_title"]);
-      } else {
-        //console.log(meetInstance["title"]);
-        //console.log(meetInstance["date"]);
+        OutlookSchedule.insert(scheduleInstance);
+        /*
+        console.log("Start to Combine...Outlook x Project -> Meetings");
+        // Combine Meetings and Projects
+        var projectCursor = Projects.find().fetch();
+        for (var index = 0; index < projectCursor.length; index++) {
+          var project = projectCursor[index];
+          var short_name = project["project_short_name"];
+          var alias_name = project["project_alias_name"];
+          var full_name = project["project_full_name"];
+          //var pattern = "(" + short_name + "|" + alias_name + "|" + full_name + ")";
+          var pattern = "/" + short_name + "|" + alias_name + "|" + full_name + "/i";
+          if (scheduleInstance["meeting_title"].match(short_name)) {
+            scheduleInstance = fillUpProjectInfo(scheduleInstance,project);
+            break;
+          }
+        }
+        */
+        //Meetings.insert(outlookScheduleInstance);
+        //console.log("Done!");
       }
-    } else {
-      // console.log(workbookJson[i]);
     }
   }
-  console.log("Meetings: " + Meetings.find().count());
-  /*
-  console.log("Start to Combine...");
-  // Combine Meetings and Projects
-  Projects.find().forEach(function(project) {
-    var short_name = project["project_short_name"];
-    var alias_name = project["project_alias_name"];
-    var full_name = project["project_full_name"];
-    var pattern = "(" + short_name + "|" + alias_name + "|" + full_name + ")";
-    // fill up meeting info with detailed project info
-    Meetings.update({"meeting_title": {$regex: short_name, $options: 'i'} },
-                    { $set: fillUpProjectInfo(project)},
-                    {upsert: false});
-  });
-  console.log("Done!");
-  */
+  console.log("Schedules: " + OutlookSchedule.find().count());
 }
 
 
@@ -241,14 +239,21 @@ var ReCreateMeetingCollection = function (fileName) {
   var workbookJson = excel.utils.sheet_to_json( sheet, options );
 
   console.log("Meeting Counts: " + workbookJson.length);
-  // insert json into Meetings Collection without duplication
+  var failedInstance = [];
   for (var i = 0 ; i < workbookJson.length; i++ ) {
     var meetingInstance = json_to_reportObj(workbookJson[i]);
     if (meetingInstance) {
-      Meetings.insert(meetingInstance);
+      try {
+        Meetings.insert(meetingInstance);
+      } catch (err) {
+        console.log("Error Import Occurred!");
+        console.log(err.sanitizedError.reason);
+        failedInstance.push(meetingInstance);
+      }
     }
   }
   console.log("Meeting Collections Imported: " + Meetings.find().count());
+  return failedInstance;
 };
 
 
@@ -295,9 +300,6 @@ if (Meteor.isServer) {
       tempDir = baseDir + "\\tmp";
     }
 
-    // TODO: TEMP Solution
-    InitMeetings("private", {name: "Meeting.xlsx"});
-
     // outlook schedule uploader (OutlookSchedule schema)
     UploadServer.init({
       uploadUrl: "/upload/",
@@ -327,17 +329,18 @@ if (Meteor.isServer) {
       },
 
       finished: function(fileInfo, formFields) {
-        console.log(fileInfo);
+        //console.log(fileInfo);
         var uploadType = formFields['uploadType'];
         if (uploadType == 'schedule_upload') {
           console.log("Adding New Outlook Schedule...");
-          // InitMeetings("uploads", fileInfo);
+          InitOutlookSchedule("uploads", fileInfo);
         } else if (uploadType == 'invest_upload') {
           console.log("Adding New Investment Project Information...");
         } else if (uploadType == 'report_upload') {
           console.log("Cover Report Data(total)...");
           Meetings.remove({});
-          ReCreateMeetingCollection(fileInfo.name);
+          var failedInstance = ReCreateMeetingCollection(fileInfo.name);
+          return failedInstance;
         } else {
           console.log("Unknown Upload controller");
         }
