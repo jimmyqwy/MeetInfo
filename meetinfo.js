@@ -124,6 +124,7 @@ if (Meteor.isClient) {
 
   Session.setDefault("searchKeyWord", "");
   Session.setDefault("DashBoardResult", {});
+  Session.setDefault("matchedProjectID", "");
   Session.setDefault('GroupDashBoard_ProjectSelect', "");
 
   ///////////////////////////////////////////////
@@ -308,6 +309,27 @@ if (Meteor.isClient) {
   Template.meeting_add_form.helpers({
     selectedFields: function() {
       return Meteor.myConstants.selectedFields;
+    },
+    matchedMeetingDoc: function () {
+      var projectID = Session.get("matchedProjectID");
+      console.log("Matching " + projectID);
+      if (projectID) {
+        var projectCursor = Projects.findOne({"projectID" : projectID});
+        if (projectCursor) {
+          var meetingInstance = {};
+          for(var k in Schemas.Meeting.schema()) {
+            meetingInstance[k] = "";
+          }
+          meetingInstance.projectID = projectID;
+          //console.log(projectCursor);
+          for(var k in Schemas.Project.schema()) {
+
+            meetingInstance[k] = projectCursor[k];
+          }
+          //console.log(meetingInstance);
+          return meetingInstance;
+        }
+      }
     }
   });
 
@@ -317,6 +339,11 @@ if (Meteor.isClient) {
       //TODO: refresh session
       console.log("bbb");
       $('#meeting_add_form').modal('hide');
+    },
+
+    'click .js-match-meeting': function () {
+      var projectID = AutoForm.getFieldValue("projectID","addMeetingInfo");
+      Session.set("matchedProjectID", projectID);
     }
   });
 
@@ -424,7 +451,12 @@ if (Meteor.isClient) {
       return dashBoard;
     },
     project_types: function() {
-      return Meteor.myConstants.project_type;
+      //return Meteor.myConstants.project_type;
+      var project_types_dash = [{label: "总计", value: "ALL"}];
+      for (var i = 0; i < Meteor.myConstants.project_type.length; i++ ) {
+        project_types_dash.push(Meteor.myConstants.project_type[i]);
+      }
+      return project_types_dash;
     },
     group_dashboard_selector: function() {
       var selector = {};
@@ -539,6 +571,10 @@ if (Meteor.isServer) {
           groupShare.proposed_share = singleValue.proposed_amount / groups.length;
           groupShare.pass_share = singleValue.pass_invest / groups.length;
           groupShare.invest_share = singleValue.real_pay / groups.length;
+
+          groupShare.proposed_count_share = singleValue.proposed_flag / groups.length;
+          groupShare.pass_count_share = singleValue.pass_flag / groups.length;
+          groupShare.invest_count_share = singleValue.invest_flag / groups.length;
 
           groupShare.proposed_share_neg = singleValue.proposed_amount_neg / groups.length;
           groupShare.pass_share_neg = singleValue.pass_invest_neg / groups.length;
@@ -663,6 +699,10 @@ if (Meteor.isServer) {
           groupShare.pass_share = reducedVal.pass_invest / groupKeys.length;
           groupShare.invest_share = reducedVal.real_pay / groupKeys.length;
 
+          groupShare.proposed_count_share = reducedVal.proposed_flag / groupKeys.length;
+          groupShare.pass_count_share = reducedVal.pass_flag / groupKeys.length;
+          groupShare.invest_count_share = reducedVal.invest_flag / groupKeys.length;
+
           groupShare.proposed_share_neg = reducedVal.proposed_amount_neg / groupKeys.length;
           groupShare.pass_share_neg = reducedVal.pass_invest_neg / groupKeys.length;
           groupShare.invest_share_neg = reducedVal.real_pay_neg / groupKeys.length;
@@ -727,10 +767,15 @@ if (Meteor.isServer) {
           if ( groupName ) {
             var groupCombineKey = groupName + "+" +
                                   reducedResults[i].value.project_type;
+            var groupTotalKey = groupName + "+" + "ALL";
+
             var groupInstance = {
               proposed_share : groupReducedResult.proposed_share,
               pass_share : groupReducedResult.pass_share,
               invest_share : groupReducedResult.invest_share,
+              proposed_count_share : groupReducedResult.proposed_count_share,
+              pass_count_share : groupReducedResult.pass_count_share,
+              invest_count_share : groupReducedResult.invest_count_share,
               proposed_share_neg : groupReducedResult.proposed_share_neg,
               pass_share_neg : groupReducedResult.pass_share_neg,
               invest_share_neg : groupReducedResult.invest_share_neg
@@ -740,11 +785,38 @@ if (Meteor.isServer) {
               groupResult[groupCombineKey].pass_share += groupInstance.pass_share;
               groupResult[groupCombineKey].invest_share += groupInstance.invest_share;
 
+              groupResult[groupCombineKey].proposed_count_share += groupInstance.proposed_count_share;
+              groupResult[groupCombineKey].pass_count_share += groupInstance.pass_count_share;
+              groupResult[groupCombineKey].invest_count_share += groupInstance.invest_count_share;
+
               groupResult[groupCombineKey].proposed_share_neg += groupInstance.proposed_share_neg;
               groupResult[groupCombineKey].pass_share_neg += groupInstance.pass_share_neg;
               groupResult[groupCombineKey].invest_share_neg += groupInstance.invest_share_neg;
             } else {
-              groupResult[groupCombineKey] = groupInstance;
+              groupResult[groupCombineKey] = {};
+              for (var key in groupInstance) {
+                groupResult[groupCombineKey][key] = groupInstance[key];
+              }
+            }
+
+            // FOR ALL !!
+            if (groupResult[groupTotalKey]) {
+              groupResult[groupTotalKey].proposed_share += groupInstance.proposed_share;
+              groupResult[groupTotalKey].pass_share += groupInstance.pass_share;
+              groupResult[groupTotalKey].invest_share += groupInstance.invest_share;
+
+              groupResult[groupTotalKey].proposed_count_share += groupInstance.proposed_count_share;
+              groupResult[groupTotalKey].pass_count_share += groupInstance.pass_count_share;
+              groupResult[groupTotalKey].invest_count_share += groupInstance.invest_count_share;
+
+              groupResult[groupTotalKey].proposed_share_neg += groupInstance.proposed_share_neg;
+              groupResult[groupTotalKey].pass_share_neg += groupInstance.pass_share_neg;
+              groupResult[groupTotalKey].invest_share_neg += groupInstance.invest_share_neg;
+            } else {
+              groupResult[groupTotalKey] = {}
+              for (var key in groupInstance) {
+                groupResult[groupTotalKey][key] = groupInstance[key];
+              }
             }
           }
         } // for each group
@@ -767,16 +839,23 @@ if (Meteor.isServer) {
             break;
           }
         }
+        if (projectTypeIdx == "ALL") {
+          projectTypeName = "总计";
+        }
+
         targetObject = {
           group: groupIdx,
           //project_type: projectTypeIdx,
           project_type: projectTypeName,
-          proposed_share: groupResult[groupKey].proposed_share,
-          pass_share: groupResult[groupKey].pass_share,
-          invest_share: groupResult[groupKey].invest_share,
-          proposed_share_neg: groupResult[groupKey].proposed_share_neg,
-          pass_share_neg: groupResult[groupKey].pass_share_neg,
-          invest_share_neg: groupResult[groupKey].invest_share_neg
+          proposed_share: Math.round(groupResult[groupKey].proposed_share * 100 ) / 100,
+          pass_share: Math.round(groupResult[groupKey].pass_share * 100 ) / 100,
+          invest_share: Math.round(groupResult[groupKey].invest_share * 100 ) / 100,
+          proposed_count_share: Math.round(groupResult[groupKey].proposed_count_share * 100 ) / 100,
+          pass_count_share: Math.round(groupResult[groupKey].pass_count_share * 100 ) / 100,
+          invest_count_share: Math.round(groupResult[groupKey].invest_count_share * 100 ) / 100,
+          proposed_share_neg: Math.round(groupResult[groupKey].proposed_share_neg * 100 ) / 100,
+          pass_share_neg: Math.round(groupResult[groupKey].pass_share_neg * 100 ) / 100,
+          invest_share_neg: Math.round(groupResult[groupKey].invest_share_neg * 100 ) / 100
         };
 
         var collectionFindKey = {

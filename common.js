@@ -392,32 +392,47 @@ Schemas.GroupDashBoard = new SimpleSchema({
   },
   proposed_share: {
     type: String,
-    label: "提报投决金额总计",
+    label: "提报投决金额",
+    optional:true
+  },
+  proposed_count_share: {
+    type: String,
+    label: "提报投决项目数量",
     optional:true
   },
   pass_share: {
     type: String,
-    label: "过会金额总计",
+    label: "过会金额",
+    optional:true
+  },
+  pass_count_share: {
+    type: String,
+    label: "过会项目数量",
     optional:true
   },
   invest_share: {
     type: String,
-    label: "出资金额总计",
+    label: "出资金额",
+    optional:true
+  },
+  invest_count_share: {
+    type: String,
+    label: "出资项目数量",
     optional:true
   },
   proposed_share_neg: {
     type: String,
-    label: "提报投决（退出）金额总计",
+    label: "提报投决（退出）金额",
     optional:true
   },
   pass_share_neg: {
     type: String,
-    label: "过会（退出）金额总计",
+    label: "过会（退出）金额",
     optional:true
   },
   invest_share_neg: {
     type: String,
-    label: "出资（退出）金额总计",
+    label: "出资（退出）金额",
     optional:true
   }
 });
@@ -482,11 +497,11 @@ TabularTables.GroupDashBoardTable = new Tabular.Table({
   columns: [
     {data: "group", title: "团队", width: "25%"},
     {data: "project_type", title: "项目类型", width: "15%"},
-    {data: "proposed_share", title: "提报投决金额总计", width: "10%"},
-    {data: "pass_share", title: "过会金额总计", width: "10%"},
-    {data: "invest_share", title: "出资金额总计", width: "10%"},
-    {data: "proposed_share_neg", title: "提报投决（退出）金额总计", width: "10%"},
-    {data: "pass_share_neg", title: "过会（退出）金额总计", width: "10%"},
-    {data: "invest_share_neg", title: "出资（退出）金额总计", width: "10%"}
+    {data: "proposed_share", title: "提报投决金额", width: "10%"},
+    {data: "proposed_count_share", title: "提报投决项目数量", width: "10%"},
+    {data: "pass_share", title: "过会金额", width: "10%"},
+    {data: "pass_count_share", title: "过会项目数量", width: "10%"},
+    {data: "invest_share", title: "出资金额", width: "10%"},
+    {data: "invest_count_share", title: "出资项目数量", width: "10%"}
   ]
 });

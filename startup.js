@@ -65,7 +65,7 @@ var json_to_projectObj = function (jsonObj) {
   }
 };
 
-var InitInvestSystem = function () {
+var InitInvestSystem = function (dirInfo, fileInfo) {
   var fs = Npm.require('fs');
   var path = Npm.require('path');
   var basepath = path.resolve('.').split('.meteor')[0];
@@ -73,7 +73,8 @@ var InitInvestSystem = function () {
   // Get excel
   console.log("Getting xlsx...");
   var excel = new Excel('xlsx');
-  var workbook = excel.readFile(basepath + "private\\BasicProjectsInfo.xlsx");
+  //var workbook = excel.readFile(basepath + "private\\BasicProjectsInfo.xlsx");
+  var workbook = excel.readFile(basepath + dirInfo + "/" + fileInfo.name);
   var sheetName = workbook.SheetNames;
   var sheet = workbook.Sheets[workbook.SheetNames[0]];
   var options = { header : 1 }
@@ -88,7 +89,7 @@ var InitInvestSystem = function () {
       Projects.insert(projectInstance);
     }
   }
-  console.log("Project Collections: " + Projects.find().count());
+  console.log("Project Collections Imported: " + Projects.find().count());
 };
 
 
@@ -144,7 +145,7 @@ var json_to_scheduleObj = function (jsonObj) {
 
 var fillUpProjectInfo = function(origin, projectInfo) {
   for(var k in Schemas.Project.schema()) {
-    origin.k = projectInfo[k];
+    origin[k] = projectInfo[k];
   }
   return origin;
 };
@@ -186,7 +187,7 @@ var InitOutlookSchedule = function(dirInfo, fileInfo) {
         /*
         console.log("Start to Combine...Outlook x Project -> Meetings");
         // Combine Meetings and Projects
-        var projectCursor = Projects.find().fetch();
+        var projectCursor = Projects.findOne();
         for (var index = 0; index < projectCursor.length; index++) {
           var project = projectCursor[index];
           var short_name = project["project_short_name"];
@@ -283,10 +284,10 @@ if (Meteor.isServer) {
     GroupDashBoard.remove({});
 
     // get data from system database
-    console.log("Project #:" + Projects.find().count());
-    if (Projects.find().count() == 0 ) {
-      InitInvestSystem();
-    }
+    console.log("Existing Project #:" + Projects.find().count());
+    //if (Projects.find().count() == 0 ) {
+    //  InitInvestSystem();
+    //}
 
     // Initialize uploader for meeeting information
     //var baseDir = process.env.PWD ? process.env.PWD + "/uploads" : "/uploads";
@@ -336,6 +337,8 @@ if (Meteor.isServer) {
           InitOutlookSchedule("uploads", fileInfo);
         } else if (uploadType == 'invest_upload') {
           console.log("Adding New Investment Project Information...");
+          Projects.remove({});
+          InitInvestSystem("uploads", fileInfo);
         } else if (uploadType == 'report_upload') {
           console.log("Cover Report Data(total)...");
           Meetings.remove({});

@@ -137,12 +137,24 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <div class="modal-title"> <h2> Add a Meeting  </h2> </div>
+          <div class="modal-title">
+            <div class="row">
+              <div class="col-xs-8 col-md-8 col-lg-8 vcenter">
+                 <h2> Add a Meeting </h2>
+              </div>
+              <div class="col-xs-2 col-md-2 col-lg-2 vcenter">
+                <button class="js-match-meeting btn btn-success" type="button">
+                  Refresh
+                </button>
+              </div>
+            </div>
+           </div>
         </div>
         <div class="modal-body">
           {{#autoForm id="addMeetingInfo"
                       type="insert"
                       collection=Collections.Meetings
+                      doc=matchedMeetingDoc
                       validation=submit}}
             {{> afQuickFields
                 template="bootstrap3-horizontal"
