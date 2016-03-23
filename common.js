@@ -53,7 +53,13 @@ Schemas.Project = new SimpleSchema({
   group: { // = project.manage_plat (L20)
     type: String,
     label: "团队",
-    optional:true
+    optional:true,
+    autoform: {
+      type: "select",
+      options: function() {
+        return Meteor.myConstants.group_info;
+      }
+    }
   },
   group_product: {
     type: String,
@@ -61,9 +67,15 @@ Schemas.Project = new SimpleSchema({
     optional:true
   },
   union_group: { // = project.union_group (L21)
-    type: String,
+    type: [String],
     label: "联合团队",
-    optional:true
+    optional:true,
+    autoform: {
+      type: "select-multiple",
+      options: function() {
+        return Meteor.myConstants.group_info;
+      }
+    }
   },
   consult_group: { // = project.consult_group (L22)
     type: String,

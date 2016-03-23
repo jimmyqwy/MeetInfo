@@ -30,7 +30,7 @@ var json_to_projectObj = function (jsonObj) {
       system_status : jsonObj[5] ? jsonObj[5] : "N/A",
       group : jsonObj[19] ? jsonObj[19] : "N/A",
       group_product : "N/A",
-      union_group : jsonObj[20] ? jsonObj[20] : "N/A",
+      union_group : jsonObj[20] ? jsonObj[20].split("&") : ["N/A"],
       consult_group : jsonObj[21] ? jsonObj[21] : "N/A",
       group_cnt : group_count,
       project_name : jsonObj[2] ? jsonObj[2] : "N/A",

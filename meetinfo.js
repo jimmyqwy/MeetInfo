@@ -78,6 +78,27 @@ var UploaderProcessor = function (uploaderName, uploaderID, progressID) {
 /////////////////////////////////////////////////////////////////////////
 if (Meteor.isClient) {
 
+  // Routing
+  Router.configure({
+    layoutTemplate: 'ApplicationLayout'
+  });
+
+  Router.route('/', function() {
+    this.render('navbar', { to : "navigator"} );
+    this.render('meetinfo', { to : "main"});
+  });
+
+  Router.route('/uploader', function() {
+    this.render('navmenu', { to : "navigator"} );
+    this.render('meetingUploader', { to : "main"});
+  });
+
+  Router.route('/dashboard', function() {
+    this.render('navmenu', { to : "navigator"} );
+    this.render('meetingDashboard', { to : "main"});
+  });
+
+  // Register
   Template.registerHelper("Schemas", Schemas);
   Template.registerHelper("Collections", Collections);
   Template.registerHelper("TabularTables", {
@@ -344,6 +365,43 @@ if (Meteor.isClient) {
     'click .js-match-meeting': function () {
       var projectID = AutoForm.getFieldValue("projectID","addMeetingInfo");
       Session.set("matchedProjectID", projectID);
+    },
+
+    'change input[name=proposed_amount]': function (event, template) {
+      var proposed_amount = $(event.target).val();
+      /*
+      var currency = $('select[name=currency]').val();
+      var ratio = 1;
+      for (var i = 0; i < Meteor.myConstants.currency.length; i++) {
+        if (Meteor.myConstants.currency[i].value == currency) {
+          ratio = Meteor.myConstants.currency[i].ratio;
+          break;
+        }
+      }
+      */
+      var ratio = $('select[name=currency] option:selected').attr('ratio');
+      if (!ratio) {
+        ratio = 1;
+      }
+      template.$('input[name=proposed_amount_CNY]').val(proposed_amount * ratio);
+    },
+
+    'change input[name=pass_invest]': function (event, template) {
+      var proposed_amount = $(event.target).val();
+      var ratio = $('select[name=currency] option:selected').attr('ratio');
+      if (!ratio) {
+        ratio = 1;
+      }
+      template.$('input[name=pass_invest_CNY]').val(proposed_amount * ratio);
+    },
+
+    'change input[name=real_pay]': function (event, template) {
+      var proposed_amount = $(event.target).val();
+      var ratio = $('select[name=currency] option:selected').attr('ratio');
+      if (!ratio) {
+        ratio = 1;
+      }
+      template.$('input[name=real_pay_CNY]').val(proposed_amount * ratio);
     }
   });
 
@@ -382,6 +440,33 @@ if (Meteor.isClient) {
 
     'click .js-update-reset': function () {
       Session.set("selectedMeetingID", 0);
+    },
+
+    'change input[name=proposed_amount]': function (event, template) {
+      var proposed_amount = $(event.target).val();
+      var ratio = $('#meetingInfo select[name=currency] option:selected').attr('ratio');
+      if (!ratio) {
+        ratio = 1;
+      }
+      template.$('input[name=proposed_amount_CNY]').val(proposed_amount * ratio);
+    },
+
+    'change input[name=pass_invest]': function (event, template) {
+      var proposed_amount = $(event.target).val();
+      var ratio = $('#meetingInfo select[name=currency] option:selected').attr('ratio');
+      if (!ratio) {
+        ratio = 1;
+      }
+      template.$('input[name=pass_invest_CNY]').val(proposed_amount * ratio);
+    },
+
+    'change input[name=real_pay]': function (event, template) {
+      var proposed_amount = $(event.target).val();
+      var ratio = $('#meetingInfo select[name=currency] option:selected').attr('ratio');
+      if (!ratio) {
+        ratio = 1;
+      }
+      template.$('input[name=real_pay_CNY]').val(proposed_amount * ratio);
     }
   });
 
@@ -688,7 +773,7 @@ if (Meteor.isServer) {
         }
 
         // GroupMaps are MAP that = {key: value} key with groupName and value is one.
-        //for (var groupIdx; groupIdx < groups.length; groupIdx++) {
+
         var groupKeys = Object.keys(groupMaps);
         for (var groupIdx = 0; groupIdx < groupKeys.length; groupIdx++) {
 
@@ -828,6 +913,7 @@ if (Meteor.isServer) {
 
       // result.group = groupResult;  -> save to Collection.Dashboard
       Collections.GroupDashBoard.remove({});
+      var allGroupStats = {};
       for (var groupKey in groupResult) {
         var groupIdx = groupKey.split("+")[0];
         var projectTypeIdx = groupKey.split("+")[1];
@@ -863,8 +949,9 @@ if (Meteor.isServer) {
           "project_type": projectTypeName
         };
 
+        // Save to GroupDashboard for each group
         var searched = GroupDashBoard.find(collectionFindKey);
-        if (searched) {
+        if (searched.count() == 0) {
           GroupDashBoard.insert(targetObject);
         } else {
           GroupDashBoard.update(
@@ -874,10 +961,86 @@ if (Meteor.isServer) {
           );
         }
 
+        // For all groups
+        if (allGroupStats[projectTypeName]) {
+          allGroupStats[projectTypeName].proposed_share += groupResult[groupKey].proposed_share,
+          allGroupStats[projectTypeName].pass_share += groupResult[groupKey].pass_share,
+          allGroupStats[projectTypeName].invest_share += groupResult[groupKey].invest_share,
+          allGroupStats[projectTypeName].proposed_count_share += groupResult[groupKey].proposed_count_share,
+          allGroupStats[projectTypeName].pass_count_share += groupResult[groupKey].pass_count_share,
+          allGroupStats[projectTypeName].invest_count_share += groupResult[groupKey].invest_count_share,
+          allGroupStats[projectTypeName].proposed_share_neg += groupResult[groupKey].proposed_share_neg,
+          allGroupStats[projectTypeName].pass_share_neg += groupResult[groupKey].pass_share_neg,
+          allGroupStats[projectTypeName].invest_share_neg += groupResult[groupKey].invest_share_neg
+        } else {
+          allGroupStats[projectTypeName] = {
+            group: "!所有团队",
+            project_type: projectTypeName,
+            proposed_share: 0,
+            pass_share: 0,
+            invest_share: 0,
+            proposed_count_share: 0,
+            pass_count_share: 0,
+            invest_count_share: 0,
+            proposed_share_neg: 0,
+            pass_share_neg: 0,
+            invest_share_neg : 0
+          };
+        }
       }
-      //result.group = Collections.GroupDashBoard;
-      //console.log(groupResult);
-      //console.log(GroupDashBoard.find().count());
+
+      //console.log(allGroupStats);
+      // Save to GroupDashBoard for ALL Groups subtotal +  one 总计 projectType
+      var allProjectType = [{label: "总计", value: "ALL"}];
+      for (var i = 0; i < Meteor.myConstants.project_type.length; i++ ) {
+        allProjectType.push(Meteor.myConstants.project_type[i]);
+      }
+
+      for (var typeIdx = 0 ; typeIdx < allProjectType.length; typeIdx++ ) {
+        var projectTypeName = allProjectType[typeIdx].label;
+        //console.log(projectTypeName);
+        if (allGroupStats[projectTypeName]) {
+          for(var key in allGroupStats[projectTypeName]) {
+            if(allGroupStats[projectTypeName].hasOwnProperty(key)
+               && key != "group" && key != "project_type") {
+              allGroupStats[projectTypeName][key] =
+                Math.round(allGroupStats[projectTypeName][key] * 100) / 100;
+            }
+          }
+        } else {
+          allGroupStats[projectTypeName]= {
+            group: "!所有团队",
+            project_type: projectTypeName,
+            proposed_share: 0,
+            pass_share: 0,
+            invest_share: 0,
+            proposed_count_share: 0,
+            pass_count_share: 0,
+            invest_count_share: 0,
+            proposed_share_neg: 0,
+            pass_share_neg: 0,
+            invest_share_neg : 0
+          };
+        }
+
+        //console.log(allGroupStats[projectTypeName]);
+        var collectionFindKey = {
+          "group": "!所有团队",
+          "project_type": projectTypeName
+        };
+        var searched = GroupDashBoard.find(collectionFindKey);
+        if (searched.count() == 0) {
+          GroupDashBoard.insert(allGroupStats[projectTypeName]);
+        } else {
+          GroupDashBoard.update(
+            collectionFindKey,
+            {upsert: false},
+            {$set:allGroupStats[projectTypeName] }
+          );
+        }
+      }
+
+      // Return result with ratio.
       return result;
     }
   });
