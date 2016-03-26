@@ -143,9 +143,13 @@ if (Meteor.isClient) {
   // Template "meetinginfo" (List of meeting information)
   /////////////////////////////////////////////
 
-  Session.setDefault("searchKeyWord", "");
+  Session.setDefault("SearchKeyWord", "");
+
+  // Match project Info when input ProjectID in inserting form
+  Session.setDefault("MatchedProjectID", "");
+
+  // Dash board result and project type selected in group dash board
   Session.setDefault("DashBoardResult", {});
-  Session.setDefault("matchedProjectID", "");
   Session.setDefault('GroupDashBoard_ProjectSelect', "");
 
   ///////////////////////////////////////////////
@@ -193,6 +197,7 @@ if (Meteor.isClient) {
   Template.selectMeeting.events({
     'click .js-select-meeting': function(event) {
       Session.set("selectedMeetingID", this._id);
+      $('#update_meeting_input_errors .text-danger').remove();
       $("#meetingUpdate").modal('show');
     }
   });
@@ -210,7 +215,7 @@ if (Meteor.isClient) {
 
   // send data to template
   Template.meetinfo.helpers({
-    //searchKeyWord: Session.get('searchKeyWord'),
+    //SearchKeyWord: Session.get('SearchKeyWord'),
 
     meetings: function () {
       ids = Session.get('MeetingTargetIDs');
@@ -275,7 +280,7 @@ if (Meteor.isClient) {
 
   Template.meetingOperation.events({
     'click .js-search': function(event) {
-      //keyWord = Session.get("searchKeyWord");
+      //keyWord = Session.get("SearchKeyWord");
       keyWord = $("#search_text_box").val();
       console.log("Search Key Word: " + keyWord);
       var docs;
@@ -297,7 +302,7 @@ if (Meteor.isClient) {
 
     'change .js-search-text': function(event) {
       //console.log(event.target);
-      //Session.set("searchKeyWord", event.target.value);
+      //Session.set("SearchKeyWord", event.target.value);
       $("#search_button").click();
     },
 
@@ -320,6 +325,7 @@ if (Meteor.isClient) {
 
     'click .js-show-meeting-form' : function(event) {
       console.log("ADD form show");
+      $('#add_meeting_input_errors .text-danger').remove();
       $("#meeting_add_form").modal('show');
     }
   });
@@ -332,7 +338,7 @@ if (Meteor.isClient) {
       return Meteor.myConstants.selectedFields;
     },
     matchedMeetingDoc: function () {
-      var projectID = Session.get("matchedProjectID");
+      var projectID = Session.get("MatchedProjectID");
       console.log("Matching " + projectID);
       if (projectID) {
         var projectCursor = Projects.findOne({"projectID" : projectID});
@@ -354,17 +360,36 @@ if (Meteor.isClient) {
     }
   });
 
+  // Insert Hooks
+  AutoForm.addHooks('addMeetingInfo', {
+    after: {
+      insert: function(error, result) {
+        $('#add_meeting_input_errors .text-danger').remove();
+        if (error) {
+          console.log("Insert Error:", error);
+          var errorDOM = $('<span class="text-danger"/>').text("Error: " + error.message);
+          errorDOM.append('<br>').appendTo('#add_meeting_input_errors');
+        } else {  // sucessful
+          console.log("Document inserted:", result);
+          $('#meeting_add_form').modal('hide');
+          $('#meeting_table').dataTable().api().ajax.reload(null, false);
+        }
+      }
+    }
+  });
+
   Template.meeting_add_form.events({
+    /*
     'click .js-add-meeting': function () {
       //TODO: Check meeting duplicate
       //TODO: refresh session
-      console.log("bbb");
-      $('#meeting_add_form').modal('hide');
+
     },
+    */
 
     'click .js-match-meeting': function () {
       var projectID = AutoForm.getFieldValue("projectID","addMeetingInfo");
-      Session.set("matchedProjectID", projectID);
+      Session.set("MatchedProjectID", projectID);
     },
 
     'change input[name=proposed_amount]': function (event, template) {
@@ -433,10 +458,28 @@ if (Meteor.isClient) {
 
   });
 
+  // Insert Hooks
+  AutoForm.addHooks('meetingInfo', {
+    after: {
+      update: function(error, result) {
+        $('#update_meeting_input_errors .text-danger').remove();
+        if (error) {
+          console.log("Update Error:", error);
+          var errorDOM = $('<span class="text-danger"/>').text("Error: " + error.message);
+          errorDOM.append('<br>').appendTo('#update_meeting_input_errors');
+        } else {  // sucessful
+          console.log("Document updated:", result);
+          $('#meetingUpdate').modal('hide');
+          $('#meeting_table').dataTable().api().ajax.reload(null, false);
+        }
+      }
+    }
+  });
+
   Template.meetingUpdate.events({
-    'click .js-update-confirm': function() {
+    /*'click .js-update-confirm': function() {
       $('#meetingUpdate').modal('hide');
-    },
+    },*/
 
     'click .js-update-reset': function () {
       Session.set("selectedMeetingID", 0);
@@ -533,6 +576,18 @@ if (Meteor.isClient) {
   Template.meetingDashboard.helpers({
     dashboard: function () {
       dashBoard = Session.get('DashBoardResult');
+
+      dashBoard.proposed_amount_total = numeral(dashBoard.proposed_amount_total).format('0,0.00');
+      dashBoard.pass_amount_total = numeral(dashBoard.pass_amount_total).format('0,0.00');
+      dashBoard.invest_amount_total = numeral(dashBoard.invest_amount_total).format('0,0.00');
+
+      dashBoard.proposed_amount_total_neg = numeral(dashBoard.proposed_amount_total_neg).format('0,0.00');
+      dashBoard.pass_amount_total_neg = numeral(dashBoard.pass_amount_total_neg).format('0,0.00');
+      dashBoard.invest_amount_total_neg = numeral(dashBoard.invest_amount_total_neg).format('0,0.00');
+
+      dashBoard.pass_target_ratio = numeral(dashBoard.pass_target_ratio).format('0,0.00');
+      dashBoard.invest_target_ratio = numeral(dashBoard.invest_target_ratio).format('0,0.00');
+      dashBoard.pass_meeting_ratio = numeral(dashBoard.pass_meeting_ratio).format('0,0.00');
       return dashBoard;
     },
     project_types: function() {
@@ -579,12 +634,11 @@ if (Meteor.isServer) {
       var reportMap = function() {  // map
 
         var key = this.projectID;
-
-        // TODO CNY!!!
-        // !!! TODO proposed_amount / pass_invest / real_pay use CNY !!!!!
         var singleValue = {
           meeting_date: new Date(this.meeting_date),
+          meeting_type: this.meeting_type,
           project_type: this.project_type,
+          project_ID: this.projectID,
 
           proposed_flag: 0,
           proposed_flag_neg: 0,
@@ -604,51 +658,78 @@ if (Meteor.isServer) {
           groups: []
         };
 
+        var num_proposed_amount = isNaN(this.proposed_amount_CNY) ? 0 : Number(this.proposed_amount_CNY);
+        var num_pass_invest = isNaN(this.pass_invest_CNY) ? 0 : Number(this.pass_invest_CNY);
+        var num_real_pay = isNaN(this.real_pay_CNY) ? 0 : Number(this.real_pay_CNY);
+
         // PROPOSED
-        if (this.proposed_amount && this.proposed_amount > 0 ) {
+        /*if (num_proposed_amount && num_proposed_amount >= 0 ) {
           singleValue.proposed_flag = 1;
-          singleValue.proposed_amount = this.proposed_amount;
-        } else if (this.proposed_amount && this.proposed_amount < 0) {
+          singleValue.proposed_amount = num_proposed_amount;
+        } else if (num_proposed_amount && num_proposed_amount < 0) {
           singleValue.proposed_flag_neg = 1;
-          singleValue.proposed_amount_neg = this.proposed_amount;
+          singleValue.proposed_amount_neg = num_proposed_amount;
+        }*/
+        if (num_proposed_amount && num_proposed_amount < 0) {
+          singleValue.proposed_flag_neg = 1;
+          singleValue.proposed_amount_neg = num_proposed_amount;
+        } else {  // no value will also regard as proposed
+          singleValue.proposed_flag = 1;
+          singleValue.proposed_amount = num_proposed_amount;
         }
 
+
         // PASS
-        if (this.pass_invest && this.pass_invest >= 0 &&
+        if ( this.meeting_type != "大额尽调审批" ) {
+          if (this.meeting_pass == "fail") {
+            singleValue.pass_flag = 0;
+            singleValue.pass_flag_neg = 0;
+            singleValue.pass_invest = 0;
+            singleValue.pass_invest_neg = 0;
+          } else if (num_pass_invest && num_pass_invest < 0 &&
             this.meeting_pass == "pass") {
-          singleValue.pass_flag = 1;
-          singleValue.pass_invest = this.pass_invest;
-        } else if (this.meeting_pass == "fail") {
-          singleValue.pass_flag = 0;
-          singleValue.pass_flag_neg = 0;
-          singleValue.pass_invest = 0;
-          singleValue.pass_invest_neg = 0;
-        } else if (this.pass_invest && this.pass_invest < 0 &&
-          this.meeting_pass == "pass") {
-          singleValue.pass_flag_neg = 1;
-          singleValue.pass_invest_neg = this.pass_invest;
+            singleValue.pass_flag_neg = 1;
+            singleValue.pass_invest_neg = num_pass_invest;
+          } else if (this.meeting_pass == "pass") {
+            //else if (num_pass_invest && num_pass_invest >= 0 &&
+            //  this.meeting_pass == "pass" ) {
+            singleValue.pass_flag = 1;
+            singleValue.pass_invest = num_pass_invest;
+          }
         }
 
         // REAL INVEST
-        if ((this.real_pay && this.real_pay > 0) || this.invest_or_not == "yes") {
+        if ((num_real_pay && num_real_pay > 0) || this.invest_or_not == "yes") {
           // if real_pay exist, accumulate proposed and pass amount
           singleValue.invest_flag = 1;
-          singleValue.real_pay = this.real_pay;
-        } else if (this.real_pay && this.real_pay < 0) {
+          singleValue.real_pay = num_real_pay;
+        } else if (num_real_pay && num_real_pay < 0) {
           // if real_pay exist, accumulate proposed and pass amount
           singleValue.invest_flag_neg = 1;
-          singleValue.real_pay_neg = this.real_pay;
+          singleValue.real_pay_neg = num_real_pay;
         }
+
 
         // groups
         groups = [];
-        groups.push(this.group);
-        if (this.union_group) {
-          var union = this.union_group.split("&").map(function(a){ return a.trim()});
-          for (var i = 0 ; i < union.length; i++) {
-            groups.push(union[i]);
+        if( this.group ) {
+          groups.push(this.group);
+        } else if ( !this.union_group || this.union_group.length == 0 ) {  // both group and union_group are empty
+          groups.push("NAGroup");
+        } else {  // we have union_group
+          if (this.union_group) {
+            //var union = this.union_group.split("&").map(function(a){ return a.trim()});
+            //for (var i = 0 ; i < union.length; i++) {
+            //  groups.push(union[i]);
+            //}
+
+            // already array object
+            for (var i = 0 ; i < this.union_group.length; i++) {
+              groups.push(this.union_group[i]);
+            }
           }
         }
+
         for (var idx = 0; idx < groups.length; idx++) {
           var groupShare = {};
           groupShare.group = groups[idx];
@@ -672,6 +753,8 @@ if (Meteor.isServer) {
       };
 
       var reportReduce = function(key, values) {  // reduce
+        //return {key: key, values: values};
+
         // sort by meeting_date
         values.sort( function(meetObjA, meetObjB) {
           var a = meetObjA.meeting_date;
@@ -686,7 +769,9 @@ if (Meteor.isServer) {
 
         var reducedVal = {
           meeting_date: meeting_date_reduced,
+          meeting_type: values[values.length - 1].meeting_type,
           project_type: values[values.length - 1].project_type,
+          project_ID: key,
 
           proposed_flag: 0,
           proposed_flag_neg: 0,
@@ -706,7 +791,8 @@ if (Meteor.isServer) {
           groups: []
         };
         // Groups: { group: "", proposed_share: "",  pass_share: "",   invest_share: "" }
-        var groupMaps = {};
+        //var groupMaps = {};
+        var groupSet = [];
 
         for (var idx = 0; idx < values.length; idx++) {
 
@@ -722,42 +808,53 @@ if (Meteor.isServer) {
           var real_pay_neg = values[idx].real_pay_neg;
 
           // PROPOSED
-          if (proposed_amount && proposed_amount > 0 ) {
+          /*
+          if (proposed_amount && proposed_amount >= 0 ) {
             reducedVal.proposed_flag = 1;
             reducedVal.proposed_amount = proposed_amount;
           } else if (proposed_amount && proposed_amount < 0) {
             reducedVal.proposed_flag_neg = 1;
             reducedVal.proposed_amount_neg = proposed_amount;
+          }*/
+          if (proposed_amount && proposed_amount < 0) {
+            reducedVal.proposed_flag_neg = 1;
+            reducedVal.proposed_amount_neg = proposed_amount;
+          } else {  // no value also regarded as proposed.
+            reducedVal.proposed_flag = 1;
+            reducedVal.proposed_amount = proposed_amount;
           }
 
           // PASS
-          if (pass_invest && pass_invest >= 0 && pass_flag == 1) {
-            reducedVal.pass_flag = 1;
-            reducedVal.pass_invest = pass_invest;
-          } else if (pass_flag == 0) {
-            reducedVal.pass_flag = 0;
-            reducedVal.pass_flag_neg = 0;
-            reducedVal.pass_invest = 0;
-            reducedVal.pass_invest_neg = 0;
-          } else if (pass_invest && pass_invest < 0 && pass_flag == 1) {
-            reducedVal.pass_flag_neg = 1;
-            reducedVal.pass_invest_neg = pass_invest;
+          if ( values[idx].meeting_type != "大额尽调审批" ) {
+            if (pass_flag == 0) {
+              reducedVal.pass_flag = 0;
+              reducedVal.pass_flag_neg = 0;
+              reducedVal.pass_invest = 0;
+              reducedVal.pass_invest_neg = 0;
+            } else if (pass_invest && pass_invest < 0 && pass_flag == 1) {
+              reducedVal.pass_flag_neg = 1;
+              reducedVal.pass_invest_neg = pass_invest;
+            } else if (pass_flag == 1) {
+              reducedVal.pass_flag = 1;
+              reducedVal.pass_invest = pass_invest;
+            }
           }
 
           // REAL INVEST
           if ((real_pay && real_pay > 0) || invest_flag == 1) {
             // if real_pay exist, accumulate proposed and pass amount
-            singleValue.invest_flag = 1;
+            reducedVal.invest_flag = 1;
             reducedVal.proposed_amount += proposed_amount;
             reducedVal.pass_invest += pass_invest;
             reducedVal.real_pay += real_pay;
           } else if (real_pay && real_pay < 0) {
             // if real_pay exist, accumulate proposed and pass amount
-            singleValue.invest_flag_neg = 1;
+            reducedVal.invest_flag_neg = 1;
             reducedVal.proposed_amount_neg += proposed_amount_neg;
             reducedVal.pass_invest_neg += pass_invest_neg;
             reducedVal.real_pay_neg += real_pay;
           }
+
 
           // last row, and real_pay is null
           if (idx == values.length - 1 && !real_pay) {
@@ -767,30 +864,51 @@ if (Meteor.isServer) {
             reducedVal.pass_invest_neg += pass_invest_neg;
           }
 
-          for (var i = 0 ; i < values[idx].groups.length; i++) {
-            groupMaps[values[idx].groups[i]] = 1;
+          //for (var i = 0 ; i < values[idx].groups.length; i++) {
+          //  groupMaps[values[idx].groups[i]] = 1;
+          //}
+          if (values[idx].groups.length == 0) {
+            groupSet.push("NAGroup");
+          } else {
+            for (var i = 0 ; i < values[idx].groups.length; i++) {
+              var curGroup = values[idx].groups[i].group;
+              var found = 0;
+              for (var j = 0; j < groupSet.length; j++) {
+                if (curGroup == groupSet[j]) {
+                  found = 1;
+                  break;
+                }
+              }
+              if (!found) {
+                groupSet.push(curGroup);
+              }
+            }
           }
         }
 
         // GroupMaps are MAP that = {key: value} key with groupName and value is one.
 
-        var groupKeys = Object.keys(groupMaps);
-        for (var groupIdx = 0; groupIdx < groupKeys.length; groupIdx++) {
-
+        //var groupKeys = Object.keys(groupMaps);
+        //for (var groupIdx = 0; groupIdx < groupKeys.length; groupIdx++) {
+        var groupSize = groupSet.length;
+        //if (groupSet.length == 0) {
+        //  groupSet.push("N/A");
+        //}
+        for (var groupIdx = 0; groupIdx < groupSize; groupIdx++) {
           var groupShare = {};
-          groupShare.group = groupKeys[groupIdx];
+          groupShare.group = groupSet[groupIdx];
           //groupShare.group = groupKey;
-          groupShare.proposed_share = reducedVal.proposed_amount / groupKeys.length;
-          groupShare.pass_share = reducedVal.pass_invest / groupKeys.length;
-          groupShare.invest_share = reducedVal.real_pay / groupKeys.length;
+          groupShare.proposed_share = reducedVal.proposed_amount / groupSize;
+          groupShare.pass_share = reducedVal.pass_invest / groupSize;
+          groupShare.invest_share = reducedVal.real_pay / groupSize;
 
-          groupShare.proposed_count_share = reducedVal.proposed_flag / groupKeys.length;
-          groupShare.pass_count_share = reducedVal.pass_flag / groupKeys.length;
-          groupShare.invest_count_share = reducedVal.invest_flag / groupKeys.length;
+          groupShare.proposed_count_share = reducedVal.proposed_flag / groupSize;
+          groupShare.pass_count_share = reducedVal.pass_flag / groupSize;
+          groupShare.invest_count_share = reducedVal.invest_flag / groupSize;
 
-          groupShare.proposed_share_neg = reducedVal.proposed_amount_neg / groupKeys.length;
-          groupShare.pass_share_neg = reducedVal.pass_invest_neg / groupKeys.length;
-          groupShare.invest_share_neg = reducedVal.real_pay_neg / groupKeys.length;
+          groupShare.proposed_share_neg = reducedVal.proposed_amount_neg / groupSize;
+          groupShare.pass_share_neg = reducedVal.pass_invest_neg / groupSize;
+          groupShare.invest_share_neg = reducedVal.real_pay_neg / groupSize;
           reducedVal.groups.push(groupShare);
         }
         return reducedVal;
@@ -803,14 +921,27 @@ if (Meteor.isServer) {
           out: "DashBoard",
           query:  {
             meeting_date: {'$gte':startDate, '$lte': endDate} ,
-            meeting_type : {'$in': ["投资决策", "投后管理"]}
+            meeting_type : {'$in': ["投资决策", "投后管理", "大额尽调审批"]}
           },
           verbose: true
         }
       );
 
       var reducedResults = DashBoard.find().fetch();
-      //console.log(reducedResults);
+
+      /*
+      for (var i = 0; i<reducedResults.length; i++ ){
+        if (i == 0){
+          console.log(reducedResults[i]);
+        }
+        if (reducedResults[i].value.project_ID == "JTZL011500076") {
+          console.log(reducedResults[i]);
+          console.log(reducedResults[i].value.groups);
+        }
+      }
+      return {};
+      */
+
       result = {};
       result.proposed_count = 0;
       result.proposed_amount_total = 0;
@@ -848,6 +979,7 @@ if (Meteor.isServer) {
         for (var groupIdx = 0; groupIdx < reducedResults[i].value.groups.length; groupIdx++) {
           var groupReducedResult = reducedResults[i].value.groups[groupIdx];
           //console.log(groupReducedResult);
+          //if (groupName=="NAGroup")
           var groupName = groupReducedResult.group;
           if ( groupName ) {
             var groupCombineKey = groupName + "+" +
@@ -915,6 +1047,7 @@ if (Meteor.isServer) {
       Collections.GroupDashBoard.remove({});
       var allGroupStats = {};
       for (var groupKey in groupResult) {
+        //console.log(groupKey);
         var groupIdx = groupKey.split("+")[0];
         var projectTypeIdx = groupKey.split("+")[1];
         var projectTypeName = "";
@@ -976,15 +1109,15 @@ if (Meteor.isServer) {
           allGroupStats[projectTypeName] = {
             group: "!所有团队",
             project_type: projectTypeName,
-            proposed_share: 0,
-            pass_share: 0,
-            invest_share: 0,
-            proposed_count_share: 0,
-            pass_count_share: 0,
-            invest_count_share: 0,
-            proposed_share_neg: 0,
-            pass_share_neg: 0,
-            invest_share_neg : 0
+            proposed_share: groupResult[groupKey].proposed_share,
+            pass_share: groupResult[groupKey].pass_share,
+            invest_share: groupResult[groupKey].invest_share,
+            proposed_count_share: groupResult[groupKey].proposed_count_share,
+            pass_count_share: groupResult[groupKey].pass_count_share,
+            invest_count_share: groupResult[groupKey].invest_count_share,
+            proposed_share_neg: groupResult[groupKey].proposed_share_neg,
+            pass_share_neg: groupResult[groupKey].pass_share_neg,
+            invest_share_neg : groupResult[groupKey].invest_share_neg
           };
         }
       }

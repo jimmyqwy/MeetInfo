@@ -218,9 +218,62 @@ var InitOutlookSchedule = function(dirInfo, fileInfo) {
 var json_to_reportObj = function (jsonObj) {
   var instance = {};
   if (jsonObj) {
+    //if (jsonObj[0] == "20160111") {
+    //  console.log(jsonObj);
+    //}
     var headers = Meteor.myConstants.selectedFields;
     for (var index = 0 ; index < headers.length; index++) {
-      instance[headers[index]] = jsonObj[index];
+      if (jsonObj[index] && jsonObj[index].indexOf("=\"") == 0) {
+        instance[headers[index]] = jsonObj[index].substring(2,jsonObj[index].length-2 );  // exclude =" and last "
+        //console.log(instance[headers[index]]);
+        //console.log(jsonObj[0]);
+      }
+      if (headers[index] == "union_group") {  // need array
+        //console.log(jsonObj[index]);
+        if (jsonObj[index]) {
+          var splits = jsonObj[index].split("&");
+          if (splits && splits.length && splits.length >= 1) {
+            var splitArray = [];
+            for (var i = 0 ; i < splits.length; i++ ) {
+               splitArray.push(splits[i]);
+            }
+            instance[headers[index]] = splitArray;
+          } else {
+            instance[headers[index]] = [jsonObj[index]];
+          }
+        } else {  // jsonObj[index] undefined
+          instance[headers[index]] = [];
+        }
+        //console.log(instance[headers[index]]);
+      } else if (headers[index] == "proposed_amount" ||
+                 headers[index] == "proposed_amount_CNY" ||
+                 headers[index] == "pass_invest" ||
+                 headers[index] == "pass_invest_CNY" ||
+                 headers[index] == "pre_money" ||
+                 headers[index] == "post_money" ||
+                 headers[index] == "real_pay" ||
+                 headers[index] == "real_pay_CNY") { // need number
+        try {
+          if (jsonObj[index] && jsonObj[index].trim() != "-") {
+            // keep in string and delete ',' for accounting
+            instance[headers[index]] = jsonObj[index].replace(/(,)/g, '');;
+          } else {
+            instance[headers[index]] = "0";
+          }
+
+        } catch (err) {
+          instance[headers[index]] = "0";
+        }
+        //if (headers[index] == "real_pay" && isNaN(instance[headers[index]])) {
+        //  console.log(instance[headers[index]]);
+        //  console.log(jsonObj);
+        //}
+      } else {  // normal
+        instance[headers[index]] = jsonObj[index];
+      }
+      if (jsonObj[index] == "N/A") {
+        instance[headers[index]] = "";
+      }
     }
   }
   return instance;
@@ -232,6 +285,7 @@ var ReCreateMeetingCollection = function (fileName) {
   var path = Npm.require('path');
   var basepath = path.resolve('.').split('.meteor')[0];
   var excel = new Excel('xlsx');
+  console.log(basepath + "uploads\\" + fileName);
   var workbook = excel.readFile(basepath + "uploads\\" + fileName);
   var sheetName = workbook.SheetNames;
   var sheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -239,9 +293,9 @@ var ReCreateMeetingCollection = function (fileName) {
   // Generate the JSON
   var workbookJson = excel.utils.sheet_to_json( sheet, options );
 
-  console.log("Meeting Counts: " + workbookJson.length);
+  console.log("Meeting Counts: " + workbookJson.length); // exclude head
   var failedInstance = [];
-  for (var i = 0 ; i < workbookJson.length; i++ ) {
+  for (var i = 1 ; i < workbookJson.length; i++ ) {  // exclude head
     var meetingInstance = json_to_reportObj(workbookJson[i]);
     if (meetingInstance) {
       try {
@@ -249,11 +303,13 @@ var ReCreateMeetingCollection = function (fileName) {
       } catch (err) {
         console.log("Error Import Occurred!");
         console.log(err.sanitizedError.reason);
-        failedInstance.push(meetingInstance);
+        console.log(meetingInstance);
+        //failedInstance.push(meetingInstance);
       }
     }
   }
   console.log("Meeting Collections Imported: " + Meetings.find().count());
+  //console.log(failedInstance);
   return failedInstance;
 };
 

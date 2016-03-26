@@ -5,6 +5,14 @@ TabularTables = {};
 /////////////////////////////////////////////////////////////////////
 ///// Project Schema
 /////////////////////////////////////////////////////////////////////
+SimpleSchema.messages(
+  {
+    "regEx" : [
+      {msg: "[label] 格式错误！"}
+    ]
+  }
+);
+
 Schemas.Project = new SimpleSchema({
   projectID : {  // = project.projectID
     type: String,
@@ -139,16 +147,16 @@ Schemas.Project = new SimpleSchema({
     optional:true,
   },
   proposed_amount: {
-    type: Number,
+    type: String,
     label: "提报金额（原币/千元）",
     optional: true,
-    regEx: /^[0-9]*$/i
+    regEx: /^[+-]?\d+(,\d+)*(.\d+(e\d+)?)?$/
   },
   proposed_amount_CNY: {
-    type: Number,
+    type: String,
     label: "提报金额（人名币/千元）",
     optional: true,
-    regEx: /^[0-9]*$/i
+    regEx: /^[+-]?\d+(,\d+)*(.\d+(e\d+)?)?$/
   },
   pass_or_not: {
     type: String,
@@ -185,16 +193,16 @@ Schemas.Project = new SimpleSchema({
     optional:true
   },
   pass_invest: {
-    type: Number,
+    type: String,
     label: "过会投资金额（原币/千元）",
     optional:true,
-    regEx: /^[0-9]*$/i
+    regEx: /^[+-]?\d+(,\d+)*(.\d+(e\d+)?)?$/
   },
   pass_invest_CNY: {
-    type: Number,
+    type: String,
     label: "过会投资金额（人民币/千元）",
     optional: true,
-    regEx: /^[0-9]*$/i
+    regEx: /^[+-]?\d+(,\d+)*(.\d+(e\d+)?)?$/
   },
   proposed_invest_plat: {
     type: String,
@@ -202,16 +210,16 @@ Schemas.Project = new SimpleSchema({
     optional:true
   },
   pre_money: {
-    type: Number,
+    type: String,
     label: "投前估值/原币",
     optional:true,
-    regEx: /^[0-9]*$/i
+    regEx: /^[+-]?\d+(,\d+)*(.\d+(e\d+)?)?$/
   },
   post_money: {
-    type: Number,
+    type: String,
     label: "投后估值/原币",
     optional:true,
-    regEx: /^[0-9]*$/i
+    regEx: /^[+-]?\d+(,\d+)*(.\d+(e\d+)?)?$/
   },
   post_deal_share: {
     type: String,
@@ -280,16 +288,16 @@ Schemas.Project = new SimpleSchema({
     optional:true
   },
   real_pay: {
-    type: Number,
+    type: String,
     label: "实际付款（原币/千元）",
     optional:true,
-    regEx: /^[0-9]*$/i
+    regEx: /^[+-]?\d+(,\d+)*(.\d+(e\d+)?)?$/
   },
   real_pay_CNY: {
-    type: Number,
+    type: String,
     label: "实际付款（人民币/千元）",
     optional:true,
-    regEx: /^[0-9]*$/i
+    regEx: /^[+-]?\d+(,\d+)*(.\d+(e\d+)?)?$/
   },
   note_bond: { // = project.note_bond : (L40)
     type: String,
@@ -509,11 +517,23 @@ TabularTables.GroupDashBoardTable = new Tabular.Table({
   columns: [
     {data: "group", title: "团队", width: "25%"},
     {data: "project_type", title: "项目类型", width: "15%"},
-    {data: "proposed_share", title: "提报投决金额", width: "10%"},
+    {data: "proposed_share", title: "提报投决金额", width: "10%",
+           render: function (val, type, doc) {
+             return numeral(val).format('0,0.00');
+           }
+    },
     {data: "proposed_count_share", title: "提报投决项目数量", width: "10%"},
-    {data: "pass_share", title: "过会金额", width: "10%"},
+    {data: "pass_share", title: "过会金额", width: "10%",
+            render: function (val, type, doc) {
+              return numeral(val).format('0,0.00');
+            }
+    },
     {data: "pass_count_share", title: "过会项目数量", width: "10%"},
-    {data: "invest_share", title: "出资金额", width: "10%"},
+    {data: "invest_share", title: "出资金额", width: "10%",
+           render: function (val, type, doc) {
+             return numeral(val).format('0,0.00');
+           }
+    },
     {data: "invest_count_share", title: "出资项目数量", width: "10%"}
   ]
 });

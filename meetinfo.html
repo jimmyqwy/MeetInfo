@@ -14,6 +14,7 @@
     <script type="text/javascript" src="js/d3.min.js"></script>
     <script type="text/javascript" src="js/bootstrap-filestyle.min.js"></script>
     <script type="text/javascript" src="js/bootstrap-select.min.js"></script>
+    <script type="text/javascript" src="js/numeral.min.js"></script>
     <!--<script type="text/javascript" src="js/ui-bootstrap-tpls-0.12.0.js"></script>-->
 
     <link href="lib/datepicker/jquery.datepick.css" rel="stylesheet">
@@ -190,6 +191,7 @@
                   Cancel
               </button>
             </div>
+            <div id="add_meeting_input_errors"></div>
           {{/autoForm}}
         </div>
         <div class="modal-footer">
@@ -226,6 +228,7 @@
               <button class="btn btn-warning" data-dismiss="modal">
                   Cancel
               </button>
+              <div id="update_meeting_input_errors"></div>
             </div>
           {{/autoForm}}
         </div>
