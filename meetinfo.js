@@ -629,7 +629,7 @@ if (Meteor.isServer) {
     meetingReport: function(startDate, endDate) {
       console.log(startDate);
       console.log(endDate);
-      //console.log(Meetings.find({projectID:'JTXH011500002'}).fetch());
+      //console.log(Meetings.find({projectID:'JTJK011600048'}).fetch());
 
       var reportMap = function() {  // map
 
@@ -716,19 +716,19 @@ if (Meteor.isServer) {
           groups.push(this.group);
         } else if ( !this.union_group || this.union_group.length == 0 ) {  // both group and union_group are empty
           groups.push("NAGroup");
-        } else {  // we have union_group
-          if (this.union_group) {
-            //var union = this.union_group.split("&").map(function(a){ return a.trim()});
-            //for (var i = 0 ; i < union.length; i++) {
-            //  groups.push(union[i]);
-            //}
+        } //else {  // we have union_group
+        if (this.union_group) {
+          //var union = this.union_group.split("&").map(function(a){ return a.trim()});
+          //for (var i = 0 ; i < union.length; i++) {
+          //  groups.push(union[i]);
+          //}
 
-            // already array object
-            for (var i = 0 ; i < this.union_group.length; i++) {
-              groups.push(this.union_group[i]);
-            }
+          // already array object
+          for (var i = 0 ; i < this.union_group.length; i++) {
+            groups.push(this.union_group[i]);
           }
         }
+        //}
 
         for (var idx = 0; idx < groups.length; idx++) {
           var groupShare = {};
@@ -931,13 +931,13 @@ if (Meteor.isServer) {
 
       /*
       for (var i = 0; i<reducedResults.length; i++ ){
-        if (i == 0){
-          console.log(reducedResults[i]);
-        }
-        if (reducedResults[i].value.project_ID == "JTZL011500076") {
+        //if (i == 0){
+        //  console.log(reducedResults[i]);
+        //}
+        //if (reducedResults[i].value.project_ID == "JTZL011500076") {
           console.log(reducedResults[i]);
           console.log(reducedResults[i].value.groups);
-        }
+        //}
       }
       return {};
       */
